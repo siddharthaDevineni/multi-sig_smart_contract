@@ -50,7 +50,7 @@ contract MultiSig {
     }
 
     /**
-     * Confirmation security: this modifier checks if the caller is one of the owners
+     * Transaction confirmation/execution security: this modifier checks if the caller is one of the owners
      */
     modifier onlyOwners(){
         bool isOwner;
@@ -96,13 +96,25 @@ contract MultiSig {
     receive() external payable{}
 
     /**
-     * Determines whether a trx is confirmed/not based on the no. of required confirmations
+     * Getter whether a trx is confirmed/not based on the no. of required confirmations
      * @param trxId transaction Id
      */
     function isConfirmed(uint256 trxId) private view returns(bool _isConfirmed){
         if (getConfirmationCount(trxId) >= required) {
             _isConfirmed = true;
         }
+    }
+
+    /**
+     * Executes a transaction when it has reached a required amount of signatures
+     * Execution results in transferring the amount to the destination (recipient)
+     * @param trxId the transaction Id
+     */
+    function executeTransaction(uint256 trxId) public onlyOwners(){
+        require(isConfirmed(trxId));
+        (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}("");
+        require(success);
+        transactions[trxId].executed = true;
     }
 
 }
