@@ -7,6 +7,16 @@ pragma solidity ^0.8.9;
 contract MultiSig {
     address[] public owners; // wallet owners
     uint256 public required; // no. of required confirmations
+    uint256 public transactionCount; // total no. of transactions stored
+
+    // Information about a transaction proposed by a owner
+    struct Transaction {
+        address destination;
+        uint256 value;
+        bool executed;
+    }
+
+    mapping(uint256 => Transaction) public transactions; // id to its Transaction
 
     /**
     * @dev When this wallet is deployed it will be configured with the owners addresses
