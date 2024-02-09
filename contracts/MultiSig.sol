@@ -11,9 +11,9 @@ contract MultiSig {
 
     // Information about a transaction proposed by a owner
     struct Transaction {
-        address destination;
-        uint256 value;
-        bool executed;
+        address destination; // recepient address
+        uint256 value; // amount to transfer
+        bool executed;  // execution status of this transaction
     }
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction
@@ -30,5 +30,17 @@ contract MultiSig {
         require(0 < _confirmations && _confirmations <= _owners.length);
         owners = _owners;
         required = _confirmations;
+    }
+
+    /**
+    * @dev adds a transaction into the storage map "transactions" and returns the id of that corresponding transaction
+    * @param destination: recipient address
+    * @param value: amount to be transferred
+    * @return transactionId: id of the newly added transaction
+    */
+    function addTransaction(address destination, uint256 value) public returns(uint256 transactionId) {
+        transactionId = transactionCount;
+        transactions[transactionId] = Transaction(destination, value, false);
+        transactionCount++;
     }
 }
