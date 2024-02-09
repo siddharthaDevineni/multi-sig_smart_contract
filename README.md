@@ -27,7 +27,8 @@ In the next `addTransaction`, the transaction with Id 1 is added and the `transa
 
 ## Use cases
 
-A multi-signature contract acts as a "wallet" as it can hold and transfer funds. It is called "multi-sig" because it typically needs greater than one signatures to approve any wallet activity such as transferring funds out. Since multi-sigs are powered by multiple keys, they avoid a single point of failure, which makes it significantly harder for funds to be compromised. This design provides a higher degree of security against lost or compromised keys.
+A multi-signature contract acts as a "wallet" as it can hold and transfer funds. It can be used as a primary wallet for an organization. This organization will have all of its funds pooled and then vote on where to spend those funds. They may direct all payments from external users/organizations to their multi-sig address.
+It is called "multi-sig" because it typically needs greater than one signatures to approve any wallet activity such as transferring funds out. Since multi-sigs are powered by multiple keys, they avoid a single point of failure, which makes it significantly harder for funds to be compromised. This design provides a higher degree of security against lost or compromised keys.
 
 Here are a few use cases that can be powered by a multi-signature smart contract wallet:
 

@@ -89,5 +89,10 @@ contract MultiSig {
     function submitTransaction(address destination, uint256 value) external {
         confirmTransaction(addTransaction(destination, value));
     }
+    
+    /**
+     * An external payable receive function that allows Multi-Sig wallet to accept funds at any time
+     */
+    receive() external payable{}
 
 }
