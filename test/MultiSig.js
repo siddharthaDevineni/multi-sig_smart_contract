@@ -15,7 +15,7 @@ describe("MultiSig", function () {
     let required = 2;
     const MultiSig = await ethers.getContractFactory("MultiSig");
     const multiSig = await MultiSig.deploy([owner1, owner2, owner3], required);
-    return { multiSig, owner1, owner2, owner3 };
+    return { multiSig, owner1, owner2, owner3, required };
   }
 
   it("Should set an array of owners", async function () {
@@ -29,5 +29,11 @@ describe("MultiSig", function () {
     let lastOwner = await multiSig.owners(2);
     assert.equal(owner1.address, firstOwner);
     assert.equal(owner3.address, lastOwner);
+  });
+
+  it("should set the number of required confirmations", async function () {
+    const { multiSig, required } = await loadFixture(deployMultiSigFixture);
+    const setRequired = await multiSig.required();
+    assert.equal(required, setRequired);
   });
 });
