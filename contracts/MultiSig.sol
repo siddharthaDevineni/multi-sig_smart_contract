@@ -118,7 +118,7 @@ contract MultiSig {
      */
     function executeTransaction(uint256 trxId) private{
         require(isConfirmed(trxId));
-        (bool success, bytes memory returnData) = transactions[trxId].destination.call{value: transactions[trxId].value}(transactions[trxId].data);
+        (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}(transactions[trxId].data);
         require(success, "Failed to execute transaction");
         transactions[trxId].executed = true;
     }
