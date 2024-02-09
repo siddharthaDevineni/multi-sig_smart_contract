@@ -15,7 +15,7 @@ describe("MultiSig", function () {
     let required = 2;
     const MultiSig = await ethers.getContractFactory("MultiSig");
     const multiSig = await MultiSig.deploy([owner1, owner2, owner3], required);
-    return { multiSig, owner1, owner2, owner3, required };
+    return { MultiSig, multiSig, owner1, owner2, owner3, required };
   }
 
   describe("for a valid multisig", () => {
@@ -41,10 +41,28 @@ describe("MultiSig", function () {
 
   describe("for a multsig with no owners", () => {
     it("should revert", async () => {
-      const MultiSig = await ethers.getContractFactory("MultiSig");
+      const { MultiSig } = await loadFixture(deployMultiSigFixture);
       await expect(MultiSig.deploy([], 1)).to.rejectedWith(
         "At least one owner has to be specified!"
       );
+    });
+  });
+
+  describe("for a multsig with no required confirmations", () => {
+    it("should revert", async () => {
+      const { MultiSig, owner1, owner2, owner3 } = await loadFixture(
+        deployMultiSigFixture
+      );
+      await expect(MultiSig.deploy([owner1, owner2, owner3], 0)).to.reverted;
+    });
+  });
+
+  describe("for a multsig with more required confirmations than the no. of owners", () => {
+    it("should revert", async () => {
+      const { MultiSig, owner1, owner2 } = await loadFixture(
+        deployMultiSigFixture
+      );
+      await expect(MultiSig.deploy([owner1, owner2], 3)).to.reverted;
     });
   });
 });

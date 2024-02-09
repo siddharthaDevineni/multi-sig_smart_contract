@@ -33,7 +33,8 @@ contract MultiSig {
     constructor(address[] memory _owners, uint256 _noOfconfirmations) {
         require(_owners.length > 0, "At least one owner has to be specified!"); // making sure there are non-zero owners for security
         // no. of signatures required has to be non-zero and less than the no. of owners
-        require(0 < _noOfconfirmations && _noOfconfirmations <= _owners.length, "Incorrect no. of signatures required!");
+        require(_noOfconfirmations > 0, "No. of signtures required should be non-zero");
+        require(_noOfconfirmations <= _owners.length, "No. of signatures required should not be more than the no. of Owners!");
         owners = _owners;
         noOfConfirmations = _noOfconfirmations;
     }
