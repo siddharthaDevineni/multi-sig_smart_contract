@@ -9,7 +9,7 @@ contract MultiSig {
     uint256 public required; // no. of required confirmations
     uint256 public transactionCount; // total no. of transactions stored
 
-    // nested confirmations mapping which maps id (uint) to an owner (address) to
+    // Nested confirmations mapping which maps id (uint) to an owner (address) to
     // whether or not they have confirmed the transaction (bool)
     mapping(uint256 => mapping(address => bool)) public confirmations;
 
@@ -21,10 +21,10 @@ contract MultiSig {
     }
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction
-    mapping(uint256 => uint256) private confirmationsCount;
+    mapping(uint256 => uint256) private trxConfirmationsCount; // the no. of times a trx is confirmed
 
     /**
-    * @dev When this wallet is deployed it will be configured with the owners addresses
+    *  When this wallet is deployed it will be configured with the owners addresses
     *      and how many signatures are required to move funds.
     * @param _owners an array to store wallet owner addresses.
     * @param _confirmations no. of confirmations required to execute a transaction
@@ -38,19 +38,19 @@ contract MultiSig {
     }
 
     /**
-    * @dev adds a transaction into the storage map "transactions" and returns the id of that corresponding transaction
+    * Adds a transaction into the storage map "transactions" and returns the id of that corresponding transaction
     * @param destination recipient address
     * @param value amount to be transferred
     * @return trxId id of the newly added transaction
     */
-    function addTransaction(address destination, uint256 value) public returns(uint256 trxId) {
+    function addTransaction(address destination, uint256 value) internal returns(uint256 trxId) {
         trxId = transactionCount;
         transactions[trxId] = Transaction(destination, value, false);
         transactionCount++;
     }
 
     /**
-     * @dev this modifier checks if the caller is one of the owners
+     * Confirmation security: this modifier checks if the caller is one of the owners
      */
     modifier onlyOwners(){
         bool isOwner;
@@ -65,7 +65,7 @@ contract MultiSig {
     }
 
     /**
-     * @dev creates a confirmation for the transaction from the caller (msg.sender) who must be one of the owners.
+     * Creates a confirmation for the transaction from the caller (msg.sender) who must be one of the owners.
      * @param trxId id of a transaction
      */
     function confirmTransaction(uint256 trxId) public onlyOwners(){
@@ -73,11 +73,21 @@ contract MultiSig {
     }
 
     /**
-     * @dev gets the number of times the given transaction with its Id is confirmed by the owners
+     * Getter for the no. of times a given transaction by its Id is confirmed by the owners
      * @param trxId the transaction Id
+     * @return trxConfirmationsCount the confirmation count of a given transaction.
      */
     function getConfirmationCount(uint256 trxId) internal view returns(uint256){
-        return confirmationsCount[trxId];
+        return trxConfirmationsCount[trxId];
+    }
+
+    /**
+     * Creates a new transaction, adds it to the storage and confirms it
+     * @param destination address of the recipient
+     * @param value amoun to be transferred
+     */
+    function submitTransaction(address destination, uint256 value) external {
+        confirmTransaction(addTransaction(destination, value));
     }
 
 }
