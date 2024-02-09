@@ -95,4 +95,14 @@ contract MultiSig {
      */
     receive() external payable{}
 
+    /**
+     * Determines whether a trx is confirmed/not based on the no. of required confirmations
+     * @param trxId transaction Id
+     */
+    function isConfirmed(uint256 trxId) private view returns(bool _isConfirmed){
+        if (getConfirmationCount(trxId) >= required) {
+            _isConfirmed = true;
+        }
+    }
+
 }
