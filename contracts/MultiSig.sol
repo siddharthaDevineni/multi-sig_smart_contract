@@ -6,7 +6,7 @@ pragma solidity ^0.8.9;
 
 contract MultiSig {
     address[] public owners; // wallet owners
-    uint256 public required; // no. of required confirmations
+    uint256 public noOfConfirmations; // no. of required confirmations
     uint256 public transactionCount; // total no. of transactions stored
 
     // Nested confirmations mapping which maps id (uint) to an owner (address) to
@@ -28,14 +28,14 @@ contract MultiSig {
     *  When this wallet is deployed it will be configured with the owners addresses
     *      and how many signatures are required to move funds.
     * @param _owners an array to store wallet owner addresses.
-    * @param _confirmations no. of confirmations required to execute a transaction
+    * @param _noOfconfirmations no. of confirmations required to execute a transaction
     */
-    constructor(address[] memory _owners, uint256 _confirmations) {
-        require(_owners.length > 0); // making sure there are zero owners for security
+    constructor(address[] memory _owners, uint256 _noOfconfirmations) {
+        require(_owners.length > 0, "At least one owner has to be specified!"); // making sure there are non-zero owners for security
         // no. of signatures required has to be non-zero and less than the no. of owners
-        require(0 < _confirmations && _confirmations <= _owners.length);
+        require(0 < _noOfconfirmations && _noOfconfirmations <= _owners.length, "Incorrect no. of signatures required!");
         owners = _owners;
-        required = _confirmations;
+        noOfConfirmations = _noOfconfirmations;
     }
 
     /**
@@ -61,7 +61,7 @@ contract MultiSig {
                 isOwner = true;
             }
         }
-        require(isOwner);
+        require(isOwner, "You are not an authorised Owner!");
         _;
     }
 
@@ -106,7 +106,7 @@ contract MultiSig {
      * @param trxId transaction Id
      */
     function isConfirmed(uint256 trxId) private view returns(bool _isConfirmed){
-        if (getConfirmationCount(trxId) >= required) {
+        if (getConfirmationCount(trxId) >= noOfConfirmations) {
             _isConfirmed = true;
         }
     }
