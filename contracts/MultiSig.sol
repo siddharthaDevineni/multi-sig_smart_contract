@@ -18,6 +18,7 @@ contract MultiSig {
         address destination; // recepient address
         uint256 value; // amount to transfer
         bool executed;  // execution status of this transaction
+        bytes data; // bytecode calldata to send
     }
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction
@@ -43,9 +44,9 @@ contract MultiSig {
     * @param value amount to be transferred
     * @return trxId id of the newly added transaction
     */
-    function addTransaction(address destination, uint256 value) internal returns(uint256 trxId) {
+    function addTransaction(address destination, uint256 value, bytes memory data) internal returns(uint256 trxId) {
         trxId = transactionCount;
-        transactions[trxId] = Transaction(destination, value, false);
+        transactions[trxId] = Transaction(destination, value, false, data);
         transactionCount++;
     }
 
@@ -65,11 +66,16 @@ contract MultiSig {
     }
 
     /**
-     * Creates a confirmation for the transaction from the caller (msg.sender) who must be one of the owners.
+     * Creates a confirmation for the transaction from the caller (msg.sender) who must be one of the owners
+     * This also executes the transaction once it has enough signatures (confirmed transaction).
      * @param trxId id of a transaction
      */
     function confirmTransaction(uint256 trxId) public onlyOwners(){
         confirmations[trxId][msg.sender] = true;
+        trxConfirmationsCount[trxId]++;
+        if (isConfirmed(trxId)) {
+            executeTransaction(trxId);
+        }
     }
 
     /**
@@ -86,8 +92,8 @@ contract MultiSig {
      * @param destination address of the recipient
      * @param value amoun to be transferred
      */
-    function submitTransaction(address destination, uint256 value) external {
-        confirmTransaction(addTransaction(destination, value));
+    function submitTransaction(address destination, uint256 value, bytes memory data) external {
+        confirmTransaction(addTransaction(destination, value, data));
     }
     
     /**
@@ -107,13 +113,13 @@ contract MultiSig {
 
     /**
      * Executes a transaction when it has reached a required amount of signatures
-     * Execution results in transferring the amount to the destination (recipient)
+     * Execution results in transferring the amount and the call data to the destination (recipient)
      * @param trxId the transaction Id
      */
-    function executeTransaction(uint256 trxId) public onlyOwners(){
+    function executeTransaction(uint256 trxId) private{
         require(isConfirmed(trxId));
-        (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}("");
-        require(success);
+        (bool success, bytes memory returnData) = transactions[trxId].destination.call{value: transactions[trxId].value}(transactions[trxId].data);
+        require(success, "Failed to execute transaction");
         transactions[trxId].executed = true;
     }
 
