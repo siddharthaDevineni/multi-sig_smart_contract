@@ -15,6 +15,9 @@ contract MultiSig {
     * @param _confirmations: no. of confirmations required to execute a transaction
     */
     constructor(address[] memory _owners, uint256 _confirmations) {
+        require(_owners.length > 0); // making sure there are zero owners for security
+        // no. of signatures required has to be non-zero and less than the no. of owners
+        require(0 < _confirmations && _confirmations <= _owners.length);
         owners = _owners;
         required = _confirmations;
     }
