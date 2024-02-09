@@ -12,6 +12,11 @@ With this setup, it doesn’t matter whether one individual loses their key, as 
 
 Splitting responsibility of ownership of an address and its funds between multiple people means the multi-sig wallet is secure against a single key being the single point of failure. Even if there is a malicious party in the multi-sig contract, they would need to corrupt a majority of the holders to compromise the wallet entirely.
 
+![](./multi_sig_trxId.png)
+
+The transaction IDs are zero-based. In the first `addTransaction`, the transaction with Id 0 is added and the `transactionCount` becomes 1.
+In the next `addTransaction`, the transaction with Id 1 is added and the `transactionCount` becomes 2 and so on.
+
 ## Use cases
 
 A multi-signature contract acts as a "wallet" as it can hold and transfer funds. It is called "multi-sig" because it typically needs greater than one signatures to approve any wallet activity such as transferring funds out. Since multi-sigs are powered by multiple keys, they avoid a single point of failure, which makes it significantly harder for funds to be compromised. This design provides a higher degree of security against lost or compromised keys.
