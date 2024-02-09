@@ -12,6 +12,14 @@ With this setup, it doesn’t matter whether one individual loses their key, as 
 
 Splitting responsibility of ownership of an address and its funds between multiple people means the multi-sig wallet is secure against a single key being the single point of failure. Even if there is a malicious party in the multi-sig contract, they would need to corrupt a majority of the holders to compromise the wallet entirely.
 
+## Nested mapping of confirmations:
+
+![](./multi_sig_mapping.png)
+
+Nested `confirmations` mapping which maps the transaction Id (uint) to an owner (address) to whether or not they have confirmed the transaction (bool). In short, a transaction Id maps to a mapping of address to booleans. In the above example, the first transaction (Id 0) maps to two addresses, one of which has confirmed the transaction. The second transaction (Id 1) maps to two addresses where both have confirmed the transaction.
+
+## `addTransaction` function:
+
 ![](./multi_sig_trxId.png)
 
 The transaction IDs are zero-based. In the first `addTransaction`, the transaction with Id 0 is added and the `transactionCount` becomes 1.

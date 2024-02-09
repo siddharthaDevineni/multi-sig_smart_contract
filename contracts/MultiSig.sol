@@ -9,6 +9,10 @@ contract MultiSig {
     uint256 public required; // no. of required confirmations
     uint256 public transactionCount; // total no. of transactions stored
 
+    // nested confirmations mapping which maps id (uint) to an owner (address) to
+    // whether or not they have confirmed the transaction (bool)
+    mapping(uint256 => mapping(address => bool)) public confirmations;
+
     // Information about a transaction proposed by a owner
     struct Transaction {
         address destination; // recepient address
@@ -43,4 +47,5 @@ contract MultiSig {
         transactions[transactionId] = Transaction(destination, value, false);
         transactionCount++;
     }
+
 }
