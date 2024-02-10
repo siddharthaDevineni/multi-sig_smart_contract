@@ -4,6 +4,7 @@ const {
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { assert, expect } = require("chai");
 const { ethers } = require("hardhat");
+const { abi } = require("../artifacts/contracts/MultiSig.sol/MultiSig.json");
 
 describe("MultiSig", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -37,9 +38,33 @@ describe("MultiSig", function () {
       const setnoOfConfirmations = await multiSig.noOfConfirmations();
       assert.equal(required, setnoOfConfirmations);
     });
+
+    it("should define a transactions mapping", async function () {
+      const transactions = abi.filter((x) => x.name === "transactions")[0];
+      assert(transactions, "transactions mapping is not defined");
+      assert.deepEqual(
+        transactions.inputs.map((x) => x.type),
+        ["uint256"]
+      );
+      assert.deepEqual(
+        transactions.outputs.map((x) => x.type),
+        ["address", "uint256", "bool", "bytes"]
+      );
+    });
+
+    it("should define a transactionCount", async () => {
+      const transactionCount = abi.filter(
+        (x) => x.name === "transactionCount"
+      )[0];
+      assert(transactionCount, "uint256 transactionCount is not defined!");
+      assert.deepEqual(
+        transactionCount.outputs.map((x) => x.type),
+        ["uint256"]
+      );
+    });
   });
 
-  describe("for a multsig with no owners", () => {
+  describe("for an invalid multsig with no owners", () => {
     it("should revert", async () => {
       const { MultiSig } = await loadFixture(deployMultiSigFixture);
       await expect(MultiSig.deploy([], 1)).to.rejectedWith(
@@ -48,7 +73,7 @@ describe("MultiSig", function () {
     });
   });
 
-  describe("for a multsig with no required confirmations", () => {
+  describe("for an invalid multsig with no required confirmations", () => {
     it("should revert", async () => {
       const { MultiSig, owner1, owner2, owner3 } = await loadFixture(
         deployMultiSigFixture
@@ -57,7 +82,7 @@ describe("MultiSig", function () {
     });
   });
 
-  describe("for a multsig with more required confirmations than the no. of owners", () => {
+  describe("for an invalid multsig with more required confirmations than the no. of owners", () => {
     it("should revert", async () => {
       const { MultiSig, owner1, owner2 } = await loadFixture(
         deployMultiSigFixture

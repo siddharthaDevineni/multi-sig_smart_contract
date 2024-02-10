@@ -13,7 +13,7 @@ contract MultiSig {
     // whether or not they have confirmed the transaction (bool)
     mapping(uint256 => mapping(address => bool)) public confirmations;
 
-    // Information about a transaction proposed by a owner
+    // Information about a transaction proposed by an owner
     struct Transaction {
         address destination; // recepient address
         uint256 value; // amount to transfer
