@@ -18,7 +18,7 @@ contract MultiSig {
         address destination; // recepient address
         uint256 value; // amount to transfer
         bool executed;  // execution status of this transaction
-        bytes data; // bytecode calldata to send
+        // bytes data; // bytecode calldata to send
     }
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction
@@ -45,9 +45,9 @@ contract MultiSig {
     * @param value amount to be transferred
     * @return trxId id of the newly added transaction
     */
-    function addTransaction(address destination, uint256 value, bytes memory data) internal returns(uint256 trxId) {
+    function addTransaction(address destination, uint256 value) internal returns(uint256 trxId) {
         trxId = transactionCount;
-        transactions[trxId] = Transaction(destination, value, false, data);
+        transactions[trxId] = Transaction(destination, value, false);
         transactionCount++;
     }
 
@@ -84,7 +84,7 @@ contract MultiSig {
      * @param trxId the transaction Id
      * @return trxConfirmationsCount the confirmation count of a given transaction.
      */
-    function getConfirmationCount(uint256 trxId) internal view returns(uint256){
+    function getConfirmationsCount(uint256 trxId) public view returns(uint256){
         return trxConfirmationsCount[trxId];
     }
 
@@ -93,8 +93,8 @@ contract MultiSig {
      * @param destination address of the recipient
      * @param value amoun to be transferred
      */
-    function submitTransaction(address destination, uint256 value, bytes memory data) external {
-        confirmTransaction(addTransaction(destination, value, data));
+    function submitTransaction(address destination, uint256 value) external onlyOwners(){
+        confirmTransaction(addTransaction(destination, value));
     }
     
     /**
@@ -107,7 +107,7 @@ contract MultiSig {
      * @param trxId transaction Id
      */
     function isConfirmed(uint256 trxId) private view returns(bool _isConfirmed){
-        if (getConfirmationCount(trxId) >= noOfConfirmations) {
+        if (getConfirmationsCount(trxId) >= noOfConfirmations) {
             _isConfirmed = true;
         }
     }
@@ -119,7 +119,7 @@ contract MultiSig {
      */
     function executeTransaction(uint256 trxId) private{
         require(isConfirmed(trxId));
-        (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}(transactions[trxId].data);
+        (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}("");
         require(success, "Failed to execute transaction");
         transactions[trxId].executed = true;
     }
