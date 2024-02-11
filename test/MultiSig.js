@@ -112,6 +112,38 @@ describe("MultiSig", function () {
       let confirmed = await multiSig.getConfirmationsCount(0);
       assert.equal(confirmed, 1);
     });
+
+    it("should accept funds", async function () {
+      const value = ethers.parseEther("1");
+      const { multiSig, owner1 } = await loadFixture(deployMultiSigFixture);
+      await owner1.sendTransaction({
+        to: multiSig.target,
+        value,
+      });
+      const balance = await ethers.provider.getBalance(multiSig.target);
+      assert.equal(balance.toString(), value.toString());
+    });
+
+    it("isConfirmed function should return true if the required threshold is met for a transaction", async function () {
+      const { multiSig, owner1, owner2 } = await loadFixture(
+        deployMultiSigFixture
+      );
+      await multiSig.connect(owner1).confirmTransaction(0);
+      await multiSig.connect(owner2).confirmTransaction(0);
+      const confirmed = await multiSig.isConfirmed(0);
+
+      assert.equal(confirmed, true);
+    });
+
+    it("isConfirmed function should return false if the required threshold is not met for a transaction", async function () {
+      const { multiSig, owner1, owner2 } = await loadFixture(
+        deployMultiSigFixture
+      );
+      await multiSig.connect(owner1).confirmTransaction(0);
+      const confirmed = await multiSig.isConfirmed(0);
+
+      assert.equal(confirmed, false);
+    });
   });
 
   describe("for an invalid multisig with no owners", async () => {

@@ -106,7 +106,7 @@ contract MultiSig {
      * Getter whether a trx is confirmed/not based on the no. of required confirmations
      * @param trxId transaction Id
      */
-    function isConfirmed(uint256 trxId) private view returns(bool _isConfirmed){
+    function isConfirmed(uint256 trxId) public view returns(bool _isConfirmed){
         if (getConfirmationsCount(trxId) >= noOfConfirmations) {
             _isConfirmed = true;
         }
@@ -118,7 +118,7 @@ contract MultiSig {
      * @param trxId the transaction Id
      */
     function executeTransaction(uint256 trxId) private{
-        require(isConfirmed(trxId));
+        require(isConfirmed(trxId), "Transaction is not confirmed yet!");
         (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}("");
         require(success, "Failed to execute transaction");
         transactions[trxId].executed = true;
