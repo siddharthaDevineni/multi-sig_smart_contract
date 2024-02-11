@@ -25,8 +25,8 @@ contract MultiSig {
     mapping(uint256 => uint256) private trxConfirmationsCount; // the no. of times a trx is confirmed
 
     /**
-    *  When this wallet is deployed it will be configured with the owners addresses
-    *      and how many signatures are required to move funds.
+    * When this wallet is deployed it will be configured with the owners addresses
+    * and how many signatures are required to move funds.
     * @param _owners an array to store wallet owner addresses.
     * @param _noOfconfirmations no. of confirmations required to execute a transaction
     */
@@ -122,6 +122,7 @@ contract MultiSig {
         address recipient = transactions[trxId].destination;
         require(address(recipient) != address(0), "destination address has to be non-zero!");
         require(address(this).balance >= transactions[trxId].value, "Insufficient funds in the wallet to transfer the required amount!");
+        require(transactions[trxId].value != 0, "amount to transfer has to be non-zero!");
         (bool success, ) = recipient.call{value: transactions[trxId].value}("");
         console.log("transactions[trxId].destination: ", transactions[trxId].destination);
         require(success, "Failed to execute transaction due to invalid transfer details/insufficient funds in the wallet!");

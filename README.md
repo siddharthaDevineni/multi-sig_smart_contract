@@ -1,6 +1,6 @@
 # multi-sig_smart_contract
 
-A multi-signature contract is a smart contract designed so that multiple signatures from different addresses are needed for a transaction to be executed. This project is a part of Alchemy University's Ethereum developer bootcamp curriculum.
+A multi-signature contract is a smart contract designed so that multiple signatures from different addresses are needed for a transaction to be executed. This project's base concept is a part of Alchemy University's Ethereum developer bootcamp curriculum.
 
 ## Implementation Overview
 
