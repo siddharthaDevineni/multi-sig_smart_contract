@@ -23,6 +23,7 @@ contract MultiSig {
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction
     mapping(uint256 => uint256) private trxConfirmationsCount; // the no. of times a trx is confirmed
+    mapping(address => bool) public isOwnerSigned; // checks whether this owner already signed a transaction
 
     /**
     * When this wallet is deployed it will be configured with the owners addresses
@@ -72,6 +73,8 @@ contract MultiSig {
      * @param trxId id of a transaction
      */
     function confirmTransaction(uint256 trxId) public onlyOwners(){
+        require(!isOwnerSigned[msg.sender], "You are not allowed to double confirm a transaction!");
+        isOwnerSigned[msg.sender] = true;
         confirmations[trxId][msg.sender] = true;
         trxConfirmationsCount[trxId]++;
         if (isConfirmed(trxId)) {
