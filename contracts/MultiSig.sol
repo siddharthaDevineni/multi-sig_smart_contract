@@ -2,7 +2,7 @@
 pragma solidity ^0.8.9;
 
 // Uncomment this line to use console.log
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract MultiSig {
     address[] public owners; // wallet owners
@@ -119,8 +119,12 @@ contract MultiSig {
      */
     function executeTransaction(uint256 trxId) private{
         require(isConfirmed(trxId), "Transaction is not confirmed yet!");
-        (bool success, ) = transactions[trxId].destination.call{value: transactions[trxId].value}("");
-        require(success, "Failed to execute transaction");
+        address recipient = transactions[trxId].destination;
+        require(address(recipient) != address(0), "destination address has to be non-zero!");
+        require(address(this).balance >= transactions[trxId].value, "Insufficient funds in the wallet to transfer the required amount!");
+        (bool success, ) = recipient.call{value: transactions[trxId].value}("");
+        console.log("transactions[trxId].destination: ", transactions[trxId].destination);
+        require(success, "Failed to execute transaction due to invalid transfer details/insufficient funds in the wallet!");
         transactions[trxId].executed = true;
     }
 

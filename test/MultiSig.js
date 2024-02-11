@@ -93,7 +93,7 @@ describe("MultiSig", function () {
       );
     });
 
-    it("should create a new Transaction, submit and execute it", async function () {
+    it("submitTransaction should add a new Transaction", async function () {
       const { multiSig, recipient } = await loadFixture(deployMultiSigFixture);
       await multiSig.submitTransaction(
         recipient.address,
@@ -103,7 +103,7 @@ describe("MultiSig", function () {
       assert.notEqual(trx.destination, 0);
     });
 
-    it("should confirm a transaction", async function () {
+    it("submitTransaction should confirm a newly added transaction once", async function () {
       const { multiSig, recipient } = await loadFixture(deployMultiSigFixture);
       await multiSig.submitTransaction(
         recipient.address,
@@ -114,8 +114,8 @@ describe("MultiSig", function () {
     });
 
     it("should accept funds", async function () {
-      const value = ethers.parseEther("1");
       const { multiSig, owner1 } = await loadFixture(deployMultiSigFixture);
+      const value = ethers.parseEther("1");
       await owner1.sendTransaction({
         to: multiSig.target,
         value,
@@ -125,14 +125,38 @@ describe("MultiSig", function () {
     });
 
     it("isConfirmed function should return true if the required threshold is met for a transaction", async function () {
-      const { multiSig, owner1, owner2 } = await loadFixture(
+      const { multiSig, owner1, owner2, recipient } = await loadFixture(
         deployMultiSigFixture
       );
-      await multiSig.connect(owner1).confirmTransaction(0);
-      await multiSig.connect(owner2).confirmTransaction(0);
+      await owner1.sendTransaction({
+        to: multiSig.target,
+        value: ethers.parseEther("2"),
+      });
+      await multiSig
+        .connect(owner1)
+        .submitTransaction(recipient.address, ethers.parseEther("1"));
+      await multiSig.connect(owner2).confirmTransaction(0); // second confirmation from owner2
       const confirmed = await multiSig.isConfirmed(0);
 
       assert.equal(confirmed, true);
+    });
+
+    it("submitTransaction should execute a transaction if confirmation threshold is met", async function () {
+      const { multiSig, owner1, owner2, recipient } = await loadFixture(
+        deployMultiSigFixture
+      );
+      await owner1.sendTransaction({
+        to: multiSig.target,
+        value: ethers.parseEther("2"),
+      }); // fund the multisig wallet first
+      await multiSig
+        .connect(owner1)
+        .submitTransaction(recipient.address, ethers.parseEther("1"));
+      await multiSig.connect(owner2).confirmTransaction(0); // second confirmation from owner2
+      console.log("recipient.address: ", recipient.address);
+
+      let txn = await multiSig.transactions(0);
+      assert.equal(txn[2], true, "Expected `executed` bool to be true!");
     });
 
     it("isConfirmed function should return false if the required threshold is not met for a transaction", async function () {
