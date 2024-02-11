@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-// Uncomment this line to use console.log
 import "hardhat/console.sol";
 
 contract MultiSig {
@@ -127,7 +126,6 @@ contract MultiSig {
         require(address(this).balance >= transactions[trxId].value, "Insufficient funds in the wallet to transfer the required amount!");
         require(transactions[trxId].value != 0, "amount to transfer has to be non-zero!");
         (bool success, ) = recipient.call{value: transactions[trxId].value}("");
-        console.log("transactions[trxId].destination: ", transactions[trxId].destination);
         require(success, "Failed to execute transaction due to invalid transfer details/insufficient funds in the wallet!");
         transactions[trxId].executed = true;
     }

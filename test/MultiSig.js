@@ -196,12 +196,18 @@ describe("MultiSig", function () {
       let txn = await multiSig.transactions(0);
       assert.equal(txn[2], false, "Expected `executed` bool to be true!");
     });
+
+    it("should revert when the same owner double confirms a transaction", async () => {
+      const { multiSig, owner1 } = await loadFixture(deployMultiSigFixture);
+      await multiSig.connect(owner1).confirmTransaction(0);
+      await expect(multiSig.connect(owner1).confirmTransaction(0)).to.reverted;
+    });
   });
 
   describe("for an invalid multisig with no owners", async () => {
     it("should revert", async () => {
       const { MultiSig } = await loadFixture(deployMultiSigFixture);
-      await expect(MultiSig.deploy([], 1)).to.rejectedWith(
+      await expect(MultiSig.deploy([], 1)).to.revertedWith(
         "At least one owner has to be specified!"
       );
     });
