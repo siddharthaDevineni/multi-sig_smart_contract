@@ -35,3 +35,9 @@ Here are a few use cases that can be powered by a multi-signature smart contract
 - Families: Inheritance, Wills, Approved Expenditure of House Expenses
 - Businesses/Startups: Business Expenses, Treasury Management, Embezzlement Protection
 - Teams/Organizations: Team Jerseys, Travel Expenses
+
+## Unit tests using hardhat and ethers
+
+There are 18 unit tests so far written using hardhat and ethers libraries:
+
+![](./multi_sig_tests.png)
