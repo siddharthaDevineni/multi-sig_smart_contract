@@ -73,6 +73,19 @@ describe("MultiSig", function () {
       );
     });
 
+    it("should define a isOwnerSigned mapping", async function () {
+      const confirmations = abi.filter((x) => x.name === "isOwnerSigned")[0];
+      assert(confirmations, "isOwnerSigned mapping is not defined!");
+      assert.deepEqual(
+        confirmations.inputs.map((x) => x.type),
+        ["address"]
+      );
+      assert.deepEqual(
+        confirmations.outputs.map((x) => x.type),
+        ["bool"]
+      );
+    });
+
     it("should define a transactionCount", async () => {
       const transactionCount = abi.filter(
         (x) => x.name === "transactionCount"
