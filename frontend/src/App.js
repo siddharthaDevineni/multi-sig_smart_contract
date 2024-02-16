@@ -17,19 +17,18 @@ function App() {
 
   const [owner, setOwner] = useState();
   const [ownerBalance, setOwnerBalance] = useState();
-  const [currentAccount, setCurrentAccount] = useState();
+  const [contractBalance, setContractBalance] = useState();
   const [fundTheContract, setFundTheContract] = useState();
   const [beneficiary, setBeneficiary] = useState();
   const [amountToSend, setAmountToSend] = useState();
   const [userInfo, setUserInfo] = useState();
-  const [contractBalance, setContractBalance] = useState();
 
-  const checkCurrentAccount = async () => {
-    const acc = await window.ethereum.request({
-      method: "eth_accounts",
-    });
-    setCurrentAccount(acc[0]);
-    console.log("currentAccount: ", acc[0]);
+  const checkCurrentAccount = () => {
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", () => {
+        checkWalletIsConnected();
+      });
+    }
   };
 
   const checkWalletIsConnected = async () => {
@@ -48,7 +47,9 @@ function App() {
             "ether"
           )
         );
-      } catch (error) {}
+      } catch (error) {
+        alert(`Error: ` + error);
+      }
     } else {
       alert(
         `You must install Metamask extension, a virtual Ethereum wallet from ${`https://metamask.io/download.html`}`
@@ -56,40 +57,9 @@ function App() {
     }
   };
 
-  // const accountChangeHandler = async (accountChanged) => {
-  //   console.log("owner: ", accountChanged);
-  //   setOwner(accountChanged);
-  //   setOwnerBalance(formatEther(await provider.getBalance(accountChanged)));
-  //   console.log("balance: ", ownerBalance);
-  // };
-
-  async function connectWallet() {
-    if (window.ethereum) {
-      try {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts",
-        });
-        setOwner(accounts[0]);
-        setOwnerBalance(
-          ethers.formatUnits(
-            await window.ethereum.request({
-              method: "eth_getBalance",
-              params: [accounts[0], "latest"],
-            }),
-            "ether"
-          )
-        );
-      } catch (error) {}
-    } else {
-      alert(
-        `Please install Metamask extension, a virtual Ethereum wallet from ${`https://metamask.io/download.html`}`
-      );
-    }
-  }
-
   const connectWalletButton = () => {
     return (
-      <button className="button" onClick={connectWallet}>
+      <button className="button" onClick={checkWalletIsConnected}>
         {owner ? (
           "Connected: " +
           String(owner).substring(0, 6) +
@@ -102,8 +72,35 @@ function App() {
     );
   };
 
+  const contractInteraction = async () => {
+    if (window.ethereum) {
+      try {
+        setContractBalance(
+          ethers.formatUnits(
+            await window.ethereum.request({
+              method: "eth_getBalance",
+              params: [multisigAddress, "latest"],
+            }),
+            "ether"
+          )
+        );
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const multiSig = new ethers.Contract(multisigAddress, ABI.abi, signer);
+      } catch (error) {
+        alert(`Error: ` + error);
+      }
+    } else {
+      alert(
+        `You must install Metamask extension, a virtual Ethereum wallet from ${`https://metamask.io/download.html`}`
+      );
+    }
+  };
+
   useEffect(() => {
     checkWalletIsConnected();
+    checkCurrentAccount();
+    contractInteraction();
   }, []);
 
   return (
@@ -113,13 +110,11 @@ function App() {
         <div>{connectWalletButton()}</div>
         <div className="owner">
           <label>Connected owner's address: {owner}</label>
-          <label>
-            Connected owner's balance: {ownerBalance}
-            <span style={{ color: "gray" }}>ETH</span>
-          </label>
+          <label>Connected owner's balance: {ownerBalance + " ETH"}</label>
         </div>
         <div className="contract">
-          <label>Contract balance: </label>
+          <label>Contract address: {multisigAddress}</label>
+          <label>Contract balance: {contractBalance + " ETH"}</label>
           <button>Fund the contract</button>
         </div>
         <div className="beneficiary">
