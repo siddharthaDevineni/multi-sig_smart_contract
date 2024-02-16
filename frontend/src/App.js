@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import ABI from "./contracts/MultiSig.json";
-import { ethers, formatEther } from "ethers";
+import { ethers, formatEther, toUtf8Bytes } from "ethers";
 
 const multisigAddress = "0xfA9349fe6A4DC98435D8067cC3a59298243D9453";
 
@@ -72,6 +72,15 @@ function App() {
     );
   };
 
+  const fundTheContractButton = (deposit) => {
+    // let depositTosend = ethers.hexlify(ethers.toUtf8Bytes(deposit));
+    // await owner.sendTransaction({
+    //   to: multisigAddress,
+    //   value: 0,
+    // });
+    console.log("deposit: ", deposit);
+  };
+
   const contractInteraction = async () => {
     if (window.ethereum) {
       try {
@@ -115,7 +124,18 @@ function App() {
         <div className="contract">
           <label>Contract address: {multisigAddress}</label>
           <label>Contract balance: {contractBalance + " ETH"}</label>
-          <button>Fund the contract</button>
+          <input
+            type="text"
+            placeholder="Deposit in ETH to the contract...."
+            onChange={(e) => setFundTheContract(e.target.value)}
+          ></input>
+          <button
+            onClick={fundTheContractButton(fundTheContract)}
+            className="fund-button"
+          >
+            {" "}
+            Deposit!
+          </button>
         </div>
         <div className="beneficiary">
           <p>Beneficiary address: </p>
