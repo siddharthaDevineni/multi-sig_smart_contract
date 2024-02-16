@@ -4,7 +4,6 @@ import ABI from "./contracts/MultiSig.json";
 import { ethers, formatEther } from "ethers";
 
 const multisigAddress = "0xfA9349fe6A4DC98435D8067cC3a59298243D9453";
-const provider = new ethers.BrowserProvider(window.ethereum);
 
 function App() {
   // functions to add in the UI
@@ -18,18 +17,37 @@ function App() {
 
   const [owner, setOwner] = useState();
   const [ownerBalance, setOwnerBalance] = useState();
+  const [currentAccount, setCurrentAccount] = useState();
   const [fundTheContract, setFundTheContract] = useState();
   const [beneficiary, setBeneficiary] = useState();
   const [amountToSend, setAmountToSend] = useState();
   const [userInfo, setUserInfo] = useState();
   const [contractBalance, setContractBalance] = useState();
 
+  const checkCurrentAccount = async () => {
+    const acc = await window.ethereum.request({
+      method: "eth_accounts",
+    });
+    setCurrentAccount(acc[0]);
+    console.log("currentAccount: ", acc[0]);
+  };
+
   const checkWalletIsConnected = async () => {
-    if (provider) {
+    if (window.ethereum) {
       try {
-        await provider
-          .send("eth_requestAccounts", [])
-          .then(async () => await accountChangeHandler(provider.getSigner()));
+        const accounts = await window.ethereum.request({
+          method: "eth_accounts",
+        });
+        setOwner(accounts[0]);
+        setOwnerBalance(
+          ethers.formatUnits(
+            await window.ethereum.request({
+              method: "eth_getBalance",
+              params: [accounts[0], "latest"],
+            }),
+            "ether"
+          )
+        );
       } catch (error) {}
     } else {
       alert(
@@ -38,9 +56,50 @@ function App() {
     }
   };
 
-  const accountChangeHandler = async (accountChanged) => {
-    setOwner(accountChanged);
-    setOwnerBalance(formatEther(await provider.getBalance(accountChanged)));
+  // const accountChangeHandler = async (accountChanged) => {
+  //   console.log("owner: ", accountChanged);
+  //   setOwner(accountChanged);
+  //   setOwnerBalance(formatEther(await provider.getBalance(accountChanged)));
+  //   console.log("balance: ", ownerBalance);
+  // };
+
+  async function connectWallet() {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        setOwner(accounts[0]);
+        setOwnerBalance(
+          ethers.formatUnits(
+            await window.ethereum.request({
+              method: "eth_getBalance",
+              params: [accounts[0], "latest"],
+            }),
+            "ether"
+          )
+        );
+      } catch (error) {}
+    } else {
+      alert(
+        `Please install Metamask extension, a virtual Ethereum wallet from ${`https://metamask.io/download.html`}`
+      );
+    }
+  }
+
+  const connectWalletButton = () => {
+    return (
+      <button className="button" onClick={connectWallet}>
+        {owner ? (
+          "Connected: " +
+          String(owner).substring(0, 6) +
+          "..." +
+          String(owner).substring(38)
+        ) : (
+          <span>Connect to Metamask</span>
+        )}
+      </button>
+    );
   };
 
   useEffect(() => {
@@ -51,22 +110,32 @@ function App() {
     <div className="App">
       <header className="App-header">
         <h2>Welcome to the Multi-Signature Decentraziled App</h2>
-        <p>Connected owner address:</p>
-        <p>Contract balance: </p>
-        <button>Fund the contract</button>
-        <p>Beneficiary address: </p>
-        <input
-          type="text"
-          placeholder="Enter your beneficiary address."
-          onChange={(e) => setBeneficiary(e.target.value)}
-        />
-        <span>----------------------------</span>
-        <p>Enter the amount in ETH</p>
-        <input
-          type="text"
-          placeholder="Enter the amount to transfer to the beneficiary."
-          onChange={(e) => setAmountToSend(e.target.value)}
-        ></input>
+        <div>{connectWalletButton()}</div>
+        <div className="owner">
+          <label>Connected owner's address: {owner}</label>
+          <label>
+            Connected owner's balance: {ownerBalance}
+            <span style={{ color: "gray" }}>ETH</span>
+          </label>
+        </div>
+        <div className="contract">
+          <label>Contract balance: </label>
+          <button>Fund the contract</button>
+        </div>
+        <div className="beneficiary">
+          <p>Beneficiary address: </p>
+          <input
+            type="text"
+            placeholder="Enter your beneficiary address."
+            onChange={(e) => setBeneficiary(e.target.value)}
+          />
+          <label>Enter the amount in ETH</label>
+          <input
+            type="text"
+            placeholder="Enter the amount to transfer to the beneficiary."
+            onChange={(e) => setAmountToSend(e.target.value)}
+          ></input>
+        </div>
       </header>
     </div>
   );

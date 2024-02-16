@@ -31,11 +31,30 @@
 .button {
   padding: 15px;
   border: none;
-  color: beige;
-  font-size: small;
+  background-color: crimson;
+  color: black;
+  font-weight: bold;
+  font-size: medium;
   cursor: pointer;
 }
 
 .fund-button {
   background-color: rgb(10, 50, 150);
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  color: black;
+  margin: 20px;
+}
+
+.owner,
+.contract,
+.beneficiary {
+  margin: 20px;
+  display: inline-block;
+  padding: 40px;
+  border: 1px solid #ddd;
+  background-color: #fff;
 }
