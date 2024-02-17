@@ -18,15 +18,17 @@ function App() {
   const [owner, setOwner] = useState();
   const [ownerBalance, setOwnerBalance] = useState("");
   const [contractBalance, setContractBalance] = useState("");
-  const [fundTheContract, setFundTheContract] = useState(0);
+  const [fundTheContract, setFundTheContract] = useState("");
   const [beneficiary, setBeneficiary] = useState();
   const [amountToSend, setAmountToSend] = useState();
   const [userInfo, setUserInfo] = useState();
+  const [trxStatus, setTrxStatus] = useState("");
 
   const checkCurrentAccount = () => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", () => {
         checkWalletIsConnected();
+        contractInteraction();
       });
     }
   };
@@ -114,23 +116,32 @@ function App() {
 
   const sendFundsToTheContract = async () => {
     if (owner && fundTheContract) {
-      let depInWei = ethers.parseEther(fundTheContract).toString();
-      let depInEth = fundTheContract;
-      console.log("depInWei: ", depInWei);
-      console.log("depInEth: ", depInEth);
-      let depositTosend = ethers.hexlify(ethers.toUtf8Bytes(fundTheContract));
-      console.log("depositToSend: ", depositTosend);
+      let depositInWei = ethers.parseEther(fundTheContract);
       try {
-        const trxFund = await window.ethereum.request({
+        const trxHash = await window.ethereum.request({
           method: "eth_sendTransaction",
           params: [
             {
               to: multisigAddress,
               from: owner,
-              value: depositTosend,
+              value: ethers.toQuantity(depositInWei),
             },
           ],
         });
+        const trxReceipt = await window.ethereum.request({
+          method: "eth_getTransactionReceipt",
+          params: [trxHash.toString()],
+        });
+        if (!(await trxReceipt.status)) {
+          setUserInfo(
+            "Loading.....,please wait till the transaction is mined successfully"
+          );
+          console.log("userInfo in null: ", userInfo);
+        } else if ((await trxReceipt.status) == 1) {
+          setUserInfo("Transaction is mined successfully!");
+          console.log("userInfo in status: ", userInfo);
+          await contractInteraction();
+        }
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
@@ -138,10 +149,10 @@ function App() {
   };
 
   useEffect(() => {
-    checkWalletIsConnected();
     checkCurrentAccount();
+    checkWalletIsConnected();
     contractInteraction();
-  }, []);
+  }, [userInfo]);
 
   return (
     <div className="App">
