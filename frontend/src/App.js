@@ -16,9 +16,9 @@ function App() {
   // check the funds of the recipient before and after
 
   const [owner, setOwner] = useState();
-  const [ownerBalance, setOwnerBalance] = useState();
-  const [contractBalance, setContractBalance] = useState();
-  const [fundTheContract, setFundTheContract] = useState();
+  const [ownerBalance, setOwnerBalance] = useState("");
+  const [contractBalance, setContractBalance] = useState("");
+  const [fundTheContract, setFundTheContract] = useState(0);
   const [beneficiary, setBeneficiary] = useState();
   const [amountToSend, setAmountToSend] = useState();
   const [userInfo, setUserInfo] = useState();
@@ -48,11 +48,39 @@ function App() {
           )
         );
       } catch (error) {
-        alert(`Error: ` + error);
+        alert(`Error: ` + `${error.message}`);
       }
     } else {
+      let link = "https://metamask.io/download.html";
       alert(
-        `You must install Metamask extension, a virtual Ethereum wallet from ${`https://metamask.io/download.html`}`
+        `Please install and connect to Metamask extension, a virtual Ethereum wallet from ` +
+          `${link}`
+      );
+    }
+  };
+
+  const contractInteraction = async () => {
+    if (window.ethereum) {
+      try {
+        setContractBalance(
+          ethers.formatEther(
+            await window.ethereum.request({
+              method: "eth_getBalance",
+              params: [multisigAddress, "latest"],
+            })
+          )
+        );
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const multiSig = new ethers.Contract(multisigAddress, ABI.abi, signer);
+      } catch (error) {
+        alert(`Error: ` + `${error.message}`);
+      }
+    } else {
+      let link = "https://metamask.io/download.html";
+      alert(
+        `Please install and connect to Metamask extension, a virtual Ethereum wallet from ` +
+          `${link}`
       );
     }
   };
@@ -72,37 +100,40 @@ function App() {
     );
   };
 
-  const fundTheContractButton = (deposit) => {
-    // let depositTosend = ethers.hexlify(ethers.toUtf8Bytes(deposit));
-    // await owner.sendTransaction({
-    //   to: multisigAddress,
-    //   value: 0,
-    // });
-    console.log("deposit: ", deposit);
+  const fundTheContractButton = () => {
+    return (
+      <button
+        style={{ visibility: fundTheContract ? "visible" : "hidden" }}
+        className="button"
+        onClick={sendFundsToTheContract}
+      >
+        Send deposits!
+      </button>
+    );
   };
 
-  const contractInteraction = async () => {
-    if (window.ethereum) {
+  const sendFundsToTheContract = async () => {
+    if (owner && fundTheContract) {
+      let depInWei = ethers.parseEther(fundTheContract).toString();
+      let depInEth = fundTheContract;
+      console.log("depInWei: ", depInWei);
+      console.log("depInEth: ", depInEth);
+      let depositTosend = ethers.hexlify(ethers.toUtf8Bytes(fundTheContract));
+      console.log("depositToSend: ", depositTosend);
       try {
-        setContractBalance(
-          ethers.formatUnits(
-            await window.ethereum.request({
-              method: "eth_getBalance",
-              params: [multisigAddress, "latest"],
-            }),
-            "ether"
-          )
-        );
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const multiSig = new ethers.Contract(multisigAddress, ABI.abi, signer);
+        const trxFund = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              to: multisigAddress,
+              from: owner,
+              value: depositTosend,
+            },
+          ],
+        });
       } catch (error) {
-        alert(`Error: ` + error);
+        alert(`Error: ` + `${error.message}`);
       }
-    } else {
-      alert(
-        `You must install Metamask extension, a virtual Ethereum wallet from ${`https://metamask.io/download.html`}`
-      );
     }
   };
 
@@ -129,13 +160,7 @@ function App() {
             placeholder="Deposit in ETH to the contract...."
             onChange={(e) => setFundTheContract(e.target.value)}
           ></input>
-          <button
-            onClick={fundTheContractButton(fundTheContract)}
-            className="fund-button"
-          >
-            {" "}
-            Deposit!
-          </button>
+          <div>{fundTheContractButton()}</div>
         </div>
         <div className="beneficiary">
           <p>Beneficiary address: </p>
