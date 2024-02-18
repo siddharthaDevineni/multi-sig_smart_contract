@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import ABI from "./contracts/MultiSig.json";
-import { ethers, formatEther, toUtf8Bytes } from "ethers";
+import { ethers, formatEther, getAddress } from "ethers";
 
-const multisigAddress = "0xfA9349fe6A4DC98435D8067cC3a59298243D9453";
+const multisigAddress = "0xeDaffB2aE995A78DCeFe1056B6DCf56d7C235aCC";
 
 function App() {
   // functions to add in the UI
@@ -21,14 +21,13 @@ function App() {
   const [fundTheContract, setFundTheContract] = useState("");
   const [beneficiary, setBeneficiary] = useState();
   const [amountToSend, setAmountToSend] = useState();
-  const [userInfo, setUserInfo] = useState();
-  const [trxStatus, setTrxStatus] = useState("");
+  const [userInfo, setUserInfo] = useState("");
+  const [contract, SetContract] = useState();
 
   const checkCurrentAccount = () => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", () => {
         checkWalletIsConnected();
-        contractInteraction();
       });
     }
   };
@@ -40,15 +39,17 @@ function App() {
           method: "eth_accounts",
         });
         setOwner(accounts[0]);
-        setOwnerBalance(
-          ethers.formatUnits(
-            await window.ethereum.request({
-              method: "eth_getBalance",
-              params: [accounts[0], "latest"],
-            }),
-            "ether"
-          )
-        );
+        console.log("owner addr: ", accounts[0]);
+        updateBalances();
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        SetContract(new ethers.Contract(multisigAddress, ABI.abi, signer));
+        console.log("contract addr: ");
+        if (contract) {
+          contract.on("Transfer", () => {
+            updateBalances();
+          });
+        }
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
@@ -61,30 +62,24 @@ function App() {
     }
   };
 
-  const contractInteraction = async () => {
-    if (window.ethereum) {
-      try {
-        setContractBalance(
-          ethers.formatEther(
-            await window.ethereum.request({
-              method: "eth_getBalance",
-              params: [multisigAddress, "latest"],
-            })
-          )
-        );
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        const multiSig = new ethers.Contract(multisigAddress, ABI.abi, signer);
-      } catch (error) {
-        alert(`Error: ` + `${error.message}`);
-      }
-    } else {
-      let link = "https://metamask.io/download.html";
-      alert(
-        `Please install and connect to Metamask extension, a virtual Ethereum wallet from ` +
-          `${link}`
-      );
-    }
+  const updateBalances = async () => {
+    setOwnerBalance(
+      ethers.formatUnits(
+        await window.ethereum.request({
+          method: "eth_getBalance",
+          params: [owner, "latest"],
+        }),
+        "ether"
+      )
+    );
+    setContractBalance(
+      ethers.formatEther(
+        await window.ethereum.request({
+          method: "eth_getBalance",
+          params: [multisigAddress, "latest"],
+        })
+      )
+    );
   };
 
   const connectWalletButton = () => {
@@ -132,16 +127,6 @@ function App() {
           method: "eth_getTransactionReceipt",
           params: [trxHash.toString()],
         });
-        if (!(await trxReceipt.status)) {
-          setUserInfo(
-            "Loading.....,please wait till the transaction is mined successfully"
-          );
-          console.log("userInfo in null: ", userInfo);
-        } else if ((await trxReceipt.status) == 1) {
-          setUserInfo("Transaction is mined successfully!");
-          console.log("userInfo in status: ", userInfo);
-          await contractInteraction();
-        }
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
@@ -151,8 +136,7 @@ function App() {
   useEffect(() => {
     checkCurrentAccount();
     checkWalletIsConnected();
-    contractInteraction();
-  }, [userInfo]);
+  }, [ownerBalance, contractBalance]);
 
   return (
     <div className="App">
@@ -167,7 +151,7 @@ function App() {
           <label>Contract address: {multisigAddress}</label>
           <label>Contract balance: {contractBalance + " ETH"}</label>
           <input
-            type="text"
+            type="number"
             placeholder="Deposit in ETH to the contract...."
             onChange={(e) => setFundTheContract(e.target.value)}
           ></input>
@@ -182,7 +166,7 @@ function App() {
           />
           <label>Enter the amount in ETH</label>
           <input
-            type="text"
+            type="number"
             placeholder="Enter the amount to transfer to the beneficiary."
             onChange={(e) => setAmountToSend(e.target.value)}
           ></input>
