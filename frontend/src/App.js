@@ -3,7 +3,7 @@ import "./App.css";
 import ABI from "./contracts/MultiSig.json";
 import { ethers, formatEther, getAddress } from "ethers";
 
-const multisigAddress = "0xeDaffB2aE995A78DCeFe1056B6DCf56d7C235aCC";
+const multisigAddress = "0xd999e344eee20D04Aff6873E3376Dfb3dfCd5c39";
 
 function App() {
   // functions to add in the UI
@@ -33,7 +33,8 @@ function App() {
     }
   };
 
-  let contract;
+  let multiSigContract;
+  let trxId = 0;
   const checkWalletIsConnected = async () => {
     if (window.ethereum) {
       try {
@@ -44,9 +45,13 @@ function App() {
         updateBalances();
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-        contract = new ethers.Contract(multisigAddress, ABI.abi, signer);
-        if (contract) {
-          contract.on("Transfer", () => {
+        multiSigContract = new ethers.Contract(
+          multisigAddress,
+          ABI.abi,
+          signer
+        );
+        if (multiSigContract) {
+          multiSigContract.on("Transfer", () => {
             updateBalances();
           });
         }
@@ -140,7 +145,8 @@ function App() {
           ],
         });
       } catch (error) {
-        alert(`Error: ` + `${error.message}`);
+        // alert(`Error: ` + `${error.message}`);
+        throw new Error(error.message);
       }
     }
   };
@@ -150,31 +156,38 @@ function App() {
       <button
         // style={{ visibility: amountToBene ? "visible" : "hidden" }}
         className="button"
-        onClick={transferToTheBene}
+        onClick={submitToConfirm}
       >
-        Confirm!
+        Submit!
       </button>
     );
   };
 
-  const transferToTheBene = async () => {
+  const submitToConfirm = async () => {
     if (owner && beneficiary && amountToBene) {
       let transferInWei = ethers.parseEther(amountToBene);
       try {
-        const trxHash = await window.ethereum.request({
-          method: "eth_sendTransaction",
-          params: [
-            {
-              to: beneficiary,
-              from: multisigAddress,
-              value: ethers.toQuantity(transferInWei),
-            },
-          ],
-        });
+        await multiSigContract.submitTransaction(
+          beneficiary,
+          ethers.toQuantity(transferInWei)
+        );
+        trxId++;
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
     }
+  };
+
+  const confirmToBeneButton = () => {
+    return (
+      <button
+        // style={{ visibility: amountToBene ? "visible" : "hidden" }}
+        className="button"
+        onClick={submitToConfirm}
+      >
+        Submit!
+      </button>
+    );
   };
 
   useEffect(() => {
@@ -222,7 +235,7 @@ function App() {
             onChange={(e) => setAmountToBene(e.target.value)}
           ></input>
           <div>{transferToBeneButton()}</div>
-          <p>Required confirmation(s): 2</p>
+          <p>Total required confirmations are 2</p>
         </div>
       </header>
     </div>

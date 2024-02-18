@@ -49,7 +49,7 @@ contract MultiSig {
     }
 
     /**
-     * Adds a transaction into the storage map "transactions" and returns the id of that corresponding transaction
+     * Adds a transaction into the storage map "transactions" and generates a new id to it
      * @param destination recipient address
      * @param value amount to be transferred
      * @return trxId id of the newly added transaction
@@ -81,8 +81,11 @@ contract MultiSig {
      * Creates a confirmation for the transaction from the caller (msg.sender) who must be one of the owners
      * This also executes the transaction once it has enough signatures (confirmed transaction).
      * @param trxId id of a transaction
+     * @return trxId id of the trx so that submitTransaction method can have this information
      */
-    function confirmTransaction(uint256 trxId) public onlyOwners {
+    function confirmTransaction(
+        uint256 trxId
+    ) public onlyOwners returns (uint256) {
         require(
             !isOwnerSigned[msg.sender],
             "You are not allowed to double confirm a transaction!"
@@ -93,6 +96,7 @@ contract MultiSig {
         if (isConfirmed(trxId)) {
             executeTransaction(trxId);
         }
+        return trxId;
     }
 
     /**
@@ -110,12 +114,13 @@ contract MultiSig {
      * Creates a new transaction, adds it to the storage and confirms it
      * @param destination address of the recipient
      * @param value amoun to be transferred
+     * @return trxId id of the submitted transaction
      */
     function submitTransaction(
         address destination,
         uint256 value
-    ) external onlyOwners {
-        confirmTransaction(addTransaction(destination, value));
+    ) external onlyOwners returns (uint256 trxId) {
+        return confirmTransaction(addTransaction(destination, value));
     }
 
     /**

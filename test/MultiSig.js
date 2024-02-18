@@ -174,7 +174,7 @@ describe("MultiSig", function () {
       await multiSig
         .connect(owner1)
         .submitTransaction(recipient.address, ethers.parseEther("1"));
-      await multiSig.connect(owner2).confirmTransaction(0); // second confirmation from owner2
+      await multiSig.connect(owner2).confirmTransaction(0); // second confirmation from owner2 executes the transaction
 
       let txn = await multiSig.transactions(0);
       assert.equal(txn[2], true, "Expected `executed` bool to be true!");
