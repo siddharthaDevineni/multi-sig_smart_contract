@@ -23,7 +23,8 @@ function App() {
   const [beneBalance, setBeneBalance] = useState();
   const [amountToBene, setAmountToBene] = useState();
   const [userInfo, setUserInfo] = useState("");
-  const [confirmations, setConfirmations] = useState("");
+  const [trxId, setTrxId] = useState("");
+  const [confirmationsLeft, setConfirmationsLeft] = useState(2);
 
   const checkCurrentAccount = () => {
     if (window.ethereum) {
@@ -33,8 +34,6 @@ function App() {
     }
   };
 
-  let multiSigContract;
-  let trxId = 0;
   const checkWalletIsConnected = async () => {
     if (window.ethereum) {
       try {
@@ -43,13 +42,7 @@ function App() {
         });
         setOwner(accounts[0]);
         updateBalances();
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        const signer = await provider.getSigner();
-        multiSigContract = new ethers.Contract(
-          multisigAddress,
-          ABI.abi,
-          signer
-        );
+        const multiSigContract = await instantiateContract();
         if (multiSigContract) {
           multiSigContract.on("Transfer", () => {
             updateBalances();
@@ -65,6 +58,17 @@ function App() {
           `${link}`
       );
     }
+  };
+
+  const instantiateContract = async () => {
+    const provider = new ethers.BrowserProvider(window.ethereum);
+    const signer = await provider.getSigner();
+    const multiSigContract = new ethers.Contract(
+      multisigAddress,
+      ABI.abi,
+      signer
+    );
+    return multiSigContract;
   };
 
   const updateBalances = async () => {
@@ -164,14 +168,19 @@ function App() {
   };
 
   const submitToConfirm = async () => {
-    if (owner && beneficiary && amountToBene) {
+    if (owner && amountToBene) {
       let transferInWei = ethers.parseEther(amountToBene);
       try {
-        await multiSigContract.submitTransaction(
+        const multiSigContract = await instantiateContract();
+        console.log("contract: ", multiSigContract);
+        // this will confirm once
+        const trxId = await multiSigContract.submitTransaction(
           beneficiary,
           ethers.toQuantity(transferInWei)
         );
-        trxId++;
+        setTrxId(trxId);
+        await confirmationsCountByTrxId();
+        console.log("trxId in submit: ", trxId);
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
@@ -183,17 +192,37 @@ function App() {
       <button
         // style={{ visibility: amountToBene ? "visible" : "hidden" }}
         className="button"
-        onClick={submitToConfirm}
+        onClick={confirmByTrxId}
       >
-        Submit!
+        Confirm to transfer!
       </button>
     );
+  };
+
+  const confirmByTrxId = async () => {
+    try {
+      const multiSigContract = await instantiateContract();
+      console.log("contract in confirm: ", trxId, " ....  ", multiSigContract);
+      const trxIdConfirm = await multiSigContract.confirmTransaction(trxId);
+      confirmationsCountByTrxId(trxIdConfirm);
+      setTrxId(trxIdConfirm);
+    } catch (error) {
+      alert(`Error: ` + `${error.message}`);
+    }
+  };
+
+  const confirmationsCountByTrxId = async (trxId) => {
+    const multiSigContract = await instantiateContract();
+    const getConfirmationsCount = await multiSigContract.getConfirmationsCount(
+      trxId
+    );
+    setConfirmationsLeft(getConfirmationsCount);
   };
 
   useEffect(() => {
     checkCurrentAccount();
     checkWalletIsConnected();
-  }, [ownerBalance, contractBalance, beneBalance, beneficiary]);
+  }, [owner, ownerBalance, contractBalance, beneBalance, beneficiary]);
 
   return (
     <div className="App">
@@ -235,7 +264,10 @@ function App() {
             onChange={(e) => setAmountToBene(e.target.value)}
           ></input>
           <div>{transferToBeneButton()}</div>
-          <p>Total required confirmations are 2</p>
+          <div>{confirmToBeneButton()}</div>
+          <p style={{ fontSize: 20 }}>
+            Required confirmation(s) to transfer : {confirmationsLeft}
+          </p>
         </div>
       </header>
     </div>
