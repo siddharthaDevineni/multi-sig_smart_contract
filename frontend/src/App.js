@@ -20,9 +20,10 @@ function App() {
   const [contractBalance, setContractBalance] = useState("");
   const [fundTheContract, setFundTheContract] = useState("");
   const [beneficiary, setBeneficiary] = useState();
-  const [amountToSend, setAmountToSend] = useState();
+  const [beneBalance, setBeneBalance] = useState();
+  const [amountToBene, setAmountToBene] = useState();
   const [userInfo, setUserInfo] = useState("");
-  const [contract, SetContract] = useState();
+  const [confirmations, setConfirmations] = useState("");
 
   const checkCurrentAccount = () => {
     if (window.ethereum) {
@@ -32,6 +33,7 @@ function App() {
     }
   };
 
+  let contract;
   const checkWalletIsConnected = async () => {
     if (window.ethereum) {
       try {
@@ -39,12 +41,10 @@ function App() {
           method: "eth_accounts",
         });
         setOwner(accounts[0]);
-        console.log("owner addr: ", accounts[0]);
         updateBalances();
         const provider = new ethers.BrowserProvider(window.ethereum);
         const signer = await provider.getSigner();
-        SetContract(new ethers.Contract(multisigAddress, ABI.abi, signer));
-        console.log("contract addr: ");
+        contract = new ethers.Contract(multisigAddress, ABI.abi, signer);
         if (contract) {
           contract.on("Transfer", () => {
             updateBalances();
@@ -63,15 +63,17 @@ function App() {
   };
 
   const updateBalances = async () => {
-    setOwnerBalance(
-      ethers.formatUnits(
-        await window.ethereum.request({
-          method: "eth_getBalance",
-          params: [owner, "latest"],
-        }),
-        "ether"
-      )
-    );
+    if (owner) {
+      setOwnerBalance(
+        ethers.formatUnits(
+          await window.ethereum.request({
+            method: "eth_getBalance",
+            params: [owner, "latest"],
+          }),
+          "ether"
+        )
+      );
+    }
     setContractBalance(
       ethers.formatEther(
         await window.ethereum.request({
@@ -80,6 +82,20 @@ function App() {
         })
       )
     );
+    if (beneficiary) {
+      try {
+        setBeneBalance(
+          ethers.formatEther(
+            await window.ethereum.request({
+              method: "eth_getBalance",
+              params: [ethers.getAddress(beneficiary), "latest"],
+            })
+          )
+        );
+      } catch (error) {
+        console.log("invalid bene: ", error.message);
+      }
+    }
   };
 
   const connectWalletButton = () => {
@@ -123,9 +139,37 @@ function App() {
             },
           ],
         });
-        const trxReceipt = await window.ethereum.request({
-          method: "eth_getTransactionReceipt",
-          params: [trxHash.toString()],
+      } catch (error) {
+        alert(`Error: ` + `${error.message}`);
+      }
+    }
+  };
+
+  const transferToBeneButton = () => {
+    return (
+      <button
+        // style={{ visibility: amountToBene ? "visible" : "hidden" }}
+        className="button"
+        onClick={transferToTheBene}
+      >
+        Confirm!
+      </button>
+    );
+  };
+
+  const transferToTheBene = async () => {
+    if (owner && beneficiary && amountToBene) {
+      let transferInWei = ethers.parseEther(amountToBene);
+      try {
+        const trxHash = await window.ethereum.request({
+          method: "eth_sendTransaction",
+          params: [
+            {
+              to: beneficiary,
+              from: multisigAddress,
+              value: ethers.toQuantity(transferInWei),
+            },
+          ],
         });
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
@@ -136,20 +180,25 @@ function App() {
   useEffect(() => {
     checkCurrentAccount();
     checkWalletIsConnected();
-  }, [ownerBalance, contractBalance]);
+  }, [ownerBalance, contractBalance, beneBalance, beneficiary]);
 
   return (
     <div className="App">
       <header className="App-header">
-        <h2>Welcome to the Multi-Signature Decentraziled App</h2>
+        <h3>Welcome to the Multi-Signature Decentraziled App</h3>
         <div>{connectWalletButton()}</div>
         <div className="owner">
           <label>Connected owner's address: {owner}</label>
-          <label>Connected owner's balance: {ownerBalance + " ETH"}</label>
+          <label>
+            Connected owner's balance:{" "}
+            {ownerBalance ? ownerBalance + ` ETH` : ""}
+          </label>
         </div>
         <div className="contract">
           <label>Contract address: {multisigAddress}</label>
-          <label>Contract balance: {contractBalance + " ETH"}</label>
+          <label>
+            Contract balance: {contractBalance ? contractBalance + ` ETH` : ""}
+          </label>
           <input
             type="number"
             placeholder="Deposit in ETH to the contract...."
@@ -158,18 +207,22 @@ function App() {
           <div>{fundTheContractButton()}</div>
         </div>
         <div className="beneficiary">
-          <p>Beneficiary address: </p>
           <input
             type="text"
             placeholder="Enter your beneficiary address."
             onChange={(e) => setBeneficiary(e.target.value)}
           />
-          <label>Enter the amount in ETH</label>
+          <label>Beneficiary address: {beneficiary}</label>
+          <label>
+            Beneficiary balance: {beneBalance ? beneBalance + ` ETH` : ""}{" "}
+          </label>
           <input
             type="number"
-            placeholder="Enter the amount to transfer to the beneficiary."
-            onChange={(e) => setAmountToSend(e.target.value)}
+            placeholder="Transfer in ETH to the beneficiary."
+            onChange={(e) => setAmountToBene(e.target.value)}
           ></input>
+          <div>{transferToBeneButton()}</div>
+          <p>Required confirmation(s): 2</p>
         </div>
       </header>
     </div>

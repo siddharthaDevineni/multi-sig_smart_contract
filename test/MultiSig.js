@@ -11,7 +11,6 @@ describe("MultiSig", function () {
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
   async function deployMultiSigFixture() {
-    // Contracts are deployed using the first signer/account by default
     const [owner1, owner2, owner3, recipient] = await ethers.getSigners();
     let required = 2;
     const MultiSig = await ethers.getContractFactory("MultiSig");
@@ -127,7 +126,7 @@ describe("MultiSig", function () {
       assert.equal(balance.toString(), value.toString());
     });
 
-    it("confirmTransaction should return true if the required threshold is met for a transaction", async function () {
+    it("isConfirmed should return true if the required threshold is met for a transaction", async function () {
       const { multiSig, owner1, owner2, recipient } = await loadFixture(
         deployMultiSigFixture
       );
@@ -144,7 +143,7 @@ describe("MultiSig", function () {
       assert.equal(confirmed, true);
     });
 
-    it("confirmTransaction should return false if the required threshold is not met for a transaction", async function () {
+    it("isConfirmed should return false if the required threshold is not met for a transaction", async function () {
       const { multiSig, owner1, owner2 } = await loadFixture(
         deployMultiSigFixture
       );

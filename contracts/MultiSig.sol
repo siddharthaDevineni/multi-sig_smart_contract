@@ -13,7 +13,7 @@ contract MultiSig {
     mapping(uint256 => mapping(address => bool)) public confirmations;
 
     // Transfer event
-    event Transfer(address from, address to, uint256 value);
+    event Transfer(address indexed from, address indexed to, uint256 value);
 
     // Information about a transaction proposed by an owner
     struct Transaction {
@@ -37,8 +37,8 @@ contract MultiSig {
         require(_owners.length > 0, "At least one owner has to be specified!"); // making sure there are non-zero owners for security
         // no. of signatures required has to be non-zero and less than the no. of owners
         require(
-            _noOfconfirmations > 0,
-            "No. of signtures required should be non-zero"
+            _noOfconfirmations > 1,
+            "No. of signtures required should be at least 2"
         );
         require(
             _noOfconfirmations <= _owners.length,
