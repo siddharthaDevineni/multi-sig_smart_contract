@@ -20,7 +20,6 @@ contract MultiSig {
         address destination; // recepient address
         uint256 value; // amount to transfer
         bool executed; // execution status of this transaction
-        // bytes data; // bytecode calldata to send
     }
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction

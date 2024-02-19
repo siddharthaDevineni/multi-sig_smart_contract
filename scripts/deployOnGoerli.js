@@ -10,8 +10,8 @@ async function main() {
   );
   const ABI = await hre.artifacts.readArtifact("MultiSig");
   const [owner1] = await ethers.getSigners(); // My wallet public address
-  const owner2 = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266";
-  const owner3 = "0x70997970C51812dc3A010C7d01b50e0d17dc79C8";
+  const owner2 = "0x99f369CaAaB302856420a875E4dd5c97c8113c43";
+  const owner3 = "0x83A663f5BEf6fc2CfA5dd0DEDC4f02285E8cAaDB";
   let required = 2;
 
   const wallet = new ethers.Wallet(privateKey, provider);

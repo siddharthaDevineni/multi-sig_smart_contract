@@ -1,20 +1,11 @@
 import { useState, useEffect } from "react";
 import "./App.css";
 import ABI from "./contracts/MultiSig.json";
-import { ethers, formatEther, getAddress } from "ethers";
+import { ethers } from "ethers";
 
-const multisigAddress = "0xd999e344eee20D04Aff6873E3376Dfb3dfCd5c39";
+const multisigAddress = "0xf225B9A2f4266Edcf9b0c16082f2143B715CEAD8";
 
 function App() {
-  // functions to add in the UI
-  // state variable for storing the owner
-  // state variables for entering recipient and the amount to send
-  // state variable to send some ETH to the contract as a pool from different owners
-  // submit a transaction from an owner
-  // confirm the above transaction by an other owner
-  // check the funds in the contract before and after
-  // check the funds of the recipient before and after
-
   const [owner, setOwner] = useState();
   const [ownerBalance, setOwnerBalance] = useState("");
   const [contractBalance, setContractBalance] = useState("");
@@ -22,7 +13,6 @@ function App() {
   const [beneficiary, setBeneficiary] = useState();
   const [beneBalance, setBeneBalance] = useState();
   const [amountToBene, setAmountToBene] = useState();
-  const [userInfo, setUserInfo] = useState("");
   const [trxId, setTrxId] = useState("");
   const [confirmationsLeft, setConfirmationsLeft] = useState(2);
 
@@ -124,11 +114,7 @@ function App() {
 
   const fundTheContractButton = () => {
     return (
-      <button
-        style={{ visibility: fundTheContract ? "visible" : "hidden" }}
-        className="button"
-        onClick={sendFundsToTheContract}
-      >
+      <button className="button" onClick={sendFundsToTheContract}>
         Send deposits!
       </button>
     );
@@ -149,19 +135,14 @@ function App() {
           ],
         });
       } catch (error) {
-        // alert(`Error: ` + `${error.message}`);
-        throw new Error(error.message);
+        alert(`Error: ` + `${error.message}`);
       }
     }
   };
 
   const transferToBeneButton = () => {
     return (
-      <button
-        // style={{ visibility: amountToBene ? "visible" : "hidden" }}
-        className="button"
-        onClick={submitToConfirm}
-      >
+      <button className="button" onClick={submitToConfirm}>
         Submit!
       </button>
     );
@@ -189,11 +170,7 @@ function App() {
 
   const confirmToBeneButton = () => {
     return (
-      <button
-        // style={{ visibility: amountToBene ? "visible" : "hidden" }}
-        className="button"
-        onClick={confirmByTrxId}
-      >
+      <button className="button" onClick={confirmByTrxId}>
         Confirm to transfer!
       </button>
     );
@@ -222,7 +199,27 @@ function App() {
   useEffect(() => {
     checkCurrentAccount();
     checkWalletIsConnected();
-  }, [owner, ownerBalance, contractBalance, beneBalance, beneficiary]);
+  }, [
+    owner,
+    ownerBalance,
+    contractBalance,
+    beneBalance,
+    beneficiary,
+    confirmationsLeft,
+  ]);
+
+  useEffect(() => {
+    const storedBene = window.localStorage.getItem("beneficiary");
+    if (storedBene) {
+      setBeneficiary(JSON.parse(storedBene));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (beneficiary) {
+      window.localStorage.setItem("beneficiary", JSON.stringify(beneficiary));
+    }
+  }, [beneficiary]);
 
   return (
     <div className="App">
@@ -232,7 +229,7 @@ function App() {
         <div className="owner">
           <label>Connected owner's address: {owner}</label>
           <label>
-            Connected owner's balance:{" "}
+            Connected owner's balance:
             {ownerBalance ? ownerBalance + ` ETH` : ""}
           </label>
         </div>
@@ -250,13 +247,14 @@ function App() {
         </div>
         <div className="beneficiary">
           <input
+            style={{ width: 750, height: 20 }}
             type="text"
-            placeholder="Enter your beneficiary address."
+            placeholder="Type here your beneficiary address to transfer the amount to...."
             onChange={(e) => setBeneficiary(e.target.value)}
           />
           <label>Beneficiary address: {beneficiary}</label>
           <label>
-            Beneficiary balance: {beneBalance ? beneBalance + ` ETH` : ""}{" "}
+            Beneficiary balance: {beneBalance ? beneBalance + ` ETH` : ""}
           </label>
           <input
             type="number"
