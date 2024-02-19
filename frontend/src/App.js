@@ -92,8 +92,11 @@ function App() {
           )
         );
       } catch (error) {
-        console.log("invalid bene: ", error.message);
+        alert(`Error: ` + `${error.message}`);
       }
+    } else {
+      setBeneficiary("");
+      setBeneBalance("");
     }
   };
 
@@ -149,11 +152,10 @@ function App() {
   };
 
   const submitToConfirm = async () => {
-    if (owner && amountToBene) {
+    if (owner && amountToBene && beneficiary) {
       let transferInWei = ethers.parseEther(amountToBene);
       try {
         const multiSigContract = await instantiateContract();
-        console.log("contract: ", multiSigContract);
         // this will confirm once
         const trxId = await multiSigContract.submitTransaction(
           beneficiary,
@@ -179,8 +181,8 @@ function App() {
   const confirmByTrxId = async () => {
     try {
       const multiSigContract = await instantiateContract();
-      console.log("contract in confirm: ", trxId, " ....  ", multiSigContract);
-      const trxIdConfirm = await multiSigContract.confirmTransaction(trxId);
+      const trxIdConfirm = await multiSigContract.confirmTransaction(1);
+      console.log("trxIdConfirm: ", trxIdConfirm);
       confirmationsCountByTrxId(trxIdConfirm);
       setTrxId(trxIdConfirm);
     } catch (error) {
@@ -191,7 +193,7 @@ function App() {
   const confirmationsCountByTrxId = async (trxId) => {
     const multiSigContract = await instantiateContract();
     const getConfirmationsCount = await multiSigContract.getConfirmationsCount(
-      trxId
+      1
     );
     setConfirmationsLeft(getConfirmationsCount);
   };
@@ -213,13 +215,20 @@ function App() {
     if (storedBene) {
       setBeneficiary(JSON.parse(storedBene));
     }
+    const storedTrxId = window.localStorage.getItem("trxId");
+    if (storedTrxId) {
+      setTrxId(JSON.parse(storedTrxId));
+    }
   }, []);
 
   useEffect(() => {
     if (beneficiary) {
       window.localStorage.setItem("beneficiary", JSON.stringify(beneficiary));
     }
-  }, [beneficiary]);
+    if (trxId) {
+      window.localStorage.setItem("trxId", JSON.stringify(trxId));
+    }
+  }, [beneficiary, trxId]);
 
   return (
     <div className="App">
@@ -229,8 +238,8 @@ function App() {
         <div className="owner">
           <label>Connected owner's address: {owner}</label>
           <label>
-            Connected owner's balance:
-            {ownerBalance ? ownerBalance + ` ETH` : ""}
+            Connected owner's balance:{" "}
+            {ownerBalance ? " " + ownerBalance + ` ETH` : ""}
           </label>
         </div>
         <div className="contract">
@@ -239,6 +248,7 @@ function App() {
             Contract balance: {contractBalance ? contractBalance + ` ETH` : ""}
           </label>
           <input
+            style={{ width: 250, height: 20 }}
             type="number"
             placeholder="Deposit in ETH to the contract...."
             onChange={(e) => setFundTheContract(e.target.value)}
@@ -257,14 +267,16 @@ function App() {
             Beneficiary balance: {beneBalance ? beneBalance + ` ETH` : ""}
           </label>
           <input
+            style={{ width: 250, height: 20 }}
             type="number"
-            placeholder="Transfer in ETH to the beneficiary."
+            placeholder="Amount in ETH to the beneficiary...."
             onChange={(e) => setAmountToBene(e.target.value)}
           ></input>
           <div>{transferToBeneButton()}</div>
           <div>{confirmToBeneButton()}</div>
           <p style={{ fontSize: 20 }}>
-            Required confirmation(s) to transfer : {confirmationsLeft}
+            Required confirmation(s) to transfer:
+            {confirmationsLeft ? " " + confirmationsLeft : " " + 0}
           </p>
         </div>
       </header>
