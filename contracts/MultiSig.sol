@@ -5,8 +5,8 @@ pragma solidity ^0.8.17;
 
 contract MultiSig {
     address[] public owners; // wallet owners
-    uint256 public noOfConfirmations; // no. of required confirmations
-    uint256 public transactionCount; // total no. of transactions stored
+    uint256 public noOfReqConfirmations; // no. of required confirmations
+    uint256 public transactionCount = 0; // total no. of transactions stored
 
     // Nested confirmations mapping which maps id (uint) to an owner (address) to
     // whether or not they have confirmed the transaction (bool)
@@ -24,27 +24,27 @@ contract MultiSig {
 
     mapping(uint256 => Transaction) public transactions; // id to its Transaction
     mapping(uint256 => uint256) private trxConfirmationsCount; // the no. of times a trx is confirmed
-    mapping(address => bool) public isOwnerSigned; // checks whether this owner already signed a transaction
+    mapping(uint256 => mapping(address => bool)) public isOwnerSignedTrx; // checks whether this owner already signed a particular transaction
 
     /**
      * When this wallet is deployed it will be configured with the owners addresses
      * and how many signatures are required to move funds.
      * @param _owners an array to store wallet owner addresses.
-     * @param _noOfconfirmations no. of confirmations required to execute a transaction
+     * @param _noOfReqConfirmations no. of confirmations required to execute a transaction
      */
-    constructor(address[] memory _owners, uint256 _noOfconfirmations) {
+    constructor(address[] memory _owners, uint256 _noOfReqConfirmations) {
         require(_owners.length > 0, "At least one owner has to be specified!"); // making sure there are non-zero owners for security
         // no. of signatures required has to be non-zero and less than the no. of owners
         require(
-            _noOfconfirmations > 1,
+            _noOfReqConfirmations > 1,
             "No. of signtures required should be at least 2"
         );
         require(
-            _noOfconfirmations <= _owners.length,
+            _noOfReqConfirmations <= _owners.length,
             "No. of signatures required should not be more than the no. of Owners!"
         );
         owners = _owners;
-        noOfConfirmations = _noOfconfirmations;
+        noOfReqConfirmations = _noOfReqConfirmations;
     }
 
     /**
@@ -86,10 +86,10 @@ contract MultiSig {
         uint256 trxId
     ) public onlyOwners returns (uint256) {
         require(
-            !isOwnerSigned[msg.sender],
-            "You are not allowed to double confirm a transaction!"
+            !isOwnerSignedTrx[trxId][msg.sender],
+            "You are not allowed to double confirm the same transaction!"
         );
-        isOwnerSigned[msg.sender] = true;
+        isOwnerSignedTrx[trxId][msg.sender] = true;
         confirmations[trxId][msg.sender] = true;
         trxConfirmationsCount[trxId]++;
         if (isConfirmed(trxId)) {
@@ -136,7 +136,7 @@ contract MultiSig {
     function isConfirmed(
         uint256 trxId
     ) public view returns (bool _isConfirmed) {
-        if (getConfirmationsCount(trxId) >= noOfConfirmations) {
+        if (getConfirmationsCount(trxId) >= noOfReqConfirmations) {
             _isConfirmed = true;
         }
     }

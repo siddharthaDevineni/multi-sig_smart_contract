@@ -72,15 +72,17 @@ describe("MultiSig", function () {
       );
     });
 
-    it("should define a isOwnerSigned mapping", async function () {
-      const confirmations = abi.filter((x) => x.name === "isOwnerSigned")[0];
-      assert(confirmations, "isOwnerSigned mapping is not defined!");
+    it("should define a isOwnerSignedTrx mapping", async function () {
+      const isOwnerSignedTrx = abi.filter(
+        (x) => x.name === "isOwnerSignedTrx"
+      )[0];
+      assert(isOwnerSignedTrx, "isOwnerSignedTrx mapping is not defined!");
       assert.deepEqual(
-        confirmations.inputs.map((x) => x.type),
-        ["address"]
+        isOwnerSignedTrx.inputs.map((x) => x.type),
+        ["uint256", "address"]
       );
       assert.deepEqual(
-        confirmations.outputs.map((x) => x.type),
+        isOwnerSignedTrx.outputs.map((x) => x.type),
         ["bool"]
       );
     });
