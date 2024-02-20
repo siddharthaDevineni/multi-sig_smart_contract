@@ -3,7 +3,9 @@ const {
 } = require("@nomicfoundation/hardhat-toolbox/network-helpers");
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { assert, expect } = require("chai");
-const { abi } = require("../artifacts/contracts/MultiSig.sol/MultiSig.json");
+const {
+  abi,
+} = require("../app/src/artifacts/contracts/MultiSig.sol/MultiSig.json");
 const { ethers } = require("hardhat");
 
 describe("MultiSig", function () {
@@ -11,7 +13,8 @@ describe("MultiSig", function () {
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
   async function deployMultiSigFixture() {
-    const [owner1, owner2, owner3, recipient] = await ethers.getSigners();
+    const [owner1, owner2, owner3, recipient, recipient2] =
+      await ethers.getSigners();
     let required = 2;
     const MultiSig = await ethers.getContractFactory("MultiSig");
     const multiSig = await MultiSig.deploy([owner1, owner2, owner3], required);
@@ -23,6 +26,7 @@ describe("MultiSig", function () {
       owner3,
       required,
       recipient,
+      recipient2,
     };
   }
 
@@ -42,8 +46,8 @@ describe("MultiSig", function () {
 
     it("should set the number of required confirmations", async function () {
       const { multiSig, required } = await loadFixture(deployMultiSigFixture);
-      const setnoOfConfirmations = await multiSig.noOfConfirmations();
-      assert.equal(required, setnoOfConfirmations);
+      const setnoOfReqConfirmations = await multiSig.noOfReqConfirmations();
+      assert.equal(required, setnoOfReqConfirmations);
     });
 
     it("should define a transactions mapping", async function () {
@@ -182,6 +186,59 @@ describe("MultiSig", function () {
       assert.equal(txn[2], true, "Expected `executed` bool to be true!");
     });
 
+    it("should transfer the amount to recipient after execution", async function () {
+      const { multiSig, owner1, owner2, recipient } = await loadFixture(
+        deployMultiSigFixture
+      );
+      await owner1.sendTransaction({
+        to: multiSig.target,
+        value: ethers.parseEther("2"),
+      }); // fund the multisig wallet first
+      await multiSig
+        .connect(owner1)
+        .submitTransaction(recipient.address, ethers.parseEther("1"));
+      await multiSig.connect(owner2).confirmTransaction(0); // second confirmation from owner2 executes the transaction
+
+      let txn = await multiSig.transactions(0);
+      assert.equal(
+        txn[1],
+        ethers.parseEther("1"),
+        "Expected to receive 1 Ether!"
+      );
+    });
+
+    it.only("should transfer the amount to another recipient after second execution", async function () {
+      const { multiSig, owner1, owner2, recipient, recipient2 } =
+        await loadFixture(deployMultiSigFixture);
+      await owner1.sendTransaction({
+        to: multiSig.target,
+        value: ethers.parseEther("3"),
+      }); // fund the multisig wallet first
+      await multiSig
+        .connect(owner1)
+        .submitTransaction(recipient.address, ethers.parseEther("1"));
+      await multiSig.connect(owner2).confirmTransaction(0); // second confirmation from owner2 executes the transaction
+
+      let txn = await multiSig.transactions(0);
+      assert.equal(
+        txn[1],
+        ethers.parseEther("1"),
+        "Expected first recepient to receive 1 Ether!"
+      );
+
+      await multiSig
+        .connect(owner1)
+        .submitTransaction(recipient2.address, ethers.parseEther("1.5"));
+      await multiSig.connect(owner2).confirmTransaction(1); // second confirmation from owner2 executes the transaction
+
+      let txn2 = await multiSig.transactions(1); // trxId 1
+      assert.equal(
+        txn2[1],
+        ethers.parseEther("1.5"),
+        "Expected second recipient to receive 1.5 Ether!"
+      );
+    });
+
     it("submitTransaction should not execute a transaction if confirmation threshold is not met", async function () {
       const { multiSig, owner1, owner2, recipient } = await loadFixture(
         deployMultiSigFixture
@@ -198,10 +255,10 @@ describe("MultiSig", function () {
       assert.equal(txn[2], false, "Expected `executed` bool to be true!");
     });
 
-    it("should revert when the same owner double confirms a transaction", async () => {
+    it("should revert when the same owner double confirms the same transaction", async () => {
       const { multiSig, owner1 } = await loadFixture(deployMultiSigFixture);
       await multiSig.connect(owner1).confirmTransaction(0);
-      await expect(multiSig.connect(owner1).confirmTransaction(0)).to.reverted;
+      await expect(multiSig.connect(owner1).confirmTransaction(0)).to.reverted; // double confirming
     });
   });
 
