@@ -94,9 +94,6 @@ function App() {
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
-    } else {
-      setBeneficiary("");
-      setBeneBalance("");
     }
   };
 
@@ -155,9 +152,8 @@ function App() {
     if (owner && amountToBene && beneficiary) {
       let transferInWei = ethers.parseEther(amountToBene);
       try {
-        multiSigContract = await instantiateContract();
+        const multiSigContract = await instantiateContract();
         const trxCount = await multiSigContract.transactionCount();
-        console.log("trxCount: ", trxCount);
         setCurrentTrxId(trxCount);
 
         // this will confirm once
@@ -165,9 +161,14 @@ function App() {
           beneficiary,
           ethers.toQuantity(transferInWei)
         );
+        setTimeout(() => {
+          confirmationsCountByTrxId();
+        }, 15000);
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
+    } else {
+      alert(`Please enter Beneficiary details`);
     }
   };
 
@@ -183,45 +184,24 @@ function App() {
     try {
       const multiSigContract = await instantiateContract();
       await multiSigContract.confirmTransaction(currentTrxId);
-      console.log("trxIdConfirm: ", currentTrxId);
-      confirmationsCountByTrxId(currentTrxId);
+      setTimeout(() => {
+        confirmationsCountByTrxId();
+      }, 15000);
     } catch (error) {
       alert(`Error: ` + `${error.message}`);
     }
   };
 
-  const confirmationsCountByTrxId = async (trxIdConfirm) => {
+  const confirmationsCountByTrxId = async () => {
     const multiSigContract = await instantiateContract();
-    const getConfirmationsCount = await multiSigContract.getConfirmationsCount(
-      trxIdConfirm
-    );
-    setConfirmationsLeft(getConfirmationsCount);
+    const getCount = await multiSigContract.getConfirmationsCount(currentTrxId);
+    setConfirmationsLeft(getCount);
   };
 
   useEffect(() => {
     checkCurrentAccount();
     checkWalletIsConnected();
-  }, [
-    owner,
-    ownerBalance,
-    contractBalance,
-    beneBalance,
-    beneficiary,
-    confirmationsLeft,
-  ]);
-
-  useEffect(() => {
-    const storedBene = window.localStorage.getItem("beneficiary");
-    if (storedBene) {
-      setBeneficiary(JSON.parse(storedBene));
-    }
-  }, []);
-
-  useEffect(() => {
-    if (beneficiary) {
-      window.localStorage.setItem("beneficiary", JSON.stringify(beneficiary));
-    }
-  }, [beneficiary]);
+  }, [owner, ownerBalance, contractBalance, beneBalance, beneficiary]);
 
   return (
     <div className="App">
@@ -269,7 +249,7 @@ function App() {
           <div>{confirmToBeneButton()}</div>
           <p style={{ fontSize: 20 }}>
             Required confirmation(s) to transfer:
-            {confirmationsLeft ? " " + confirmationsLeft : " " + 0}
+            {confirmationsLeft ? " " + confirmationsLeft : " "}
           </p>
         </div>
       </header>
