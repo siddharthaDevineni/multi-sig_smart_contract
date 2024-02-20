@@ -1,6 +1,6 @@
-# MultiSig Smart Contract
+# Full-Stack Multi-Signature dApp
 
-A multi-signature contract is a smart contract designed so that multiple signatures from different addresses are needed for a transaction to be executed. This project's base concept is a part of Alchemy University's Ethereum Developer bootcamp curriculum.
+Developed using ethers and react. A multi-signature contract is a smart contract designed so that multiple signatures from different addresses are needed for a transaction to be executed. This project's base concept is a part of Alchemy University's Ethereum Developer bootcamp curriculum.
 
 ## Full-Stack Multi-Sigature dApp
 
