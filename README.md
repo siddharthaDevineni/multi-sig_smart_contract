@@ -2,6 +2,10 @@
 
 A multi-signature contract is a smart contract designed so that multiple signatures from different addresses are needed for a transaction to be executed. This project's base concept is a part of Alchemy University's Ethereum Developer bootcamp curriculum.
 
+## Full-Stack Multi-Sigature dApp
+
+![](./multi_sig_frontend.png)
+
 ## Implementation Overview:
 
 ![](multi_sig_display.png)
@@ -38,6 +42,26 @@ Here are a few use cases that can be powered by a multi-signature smart contract
 
 ## Unit tests using hardhat and ethers
 
-There are 18 unit tests so far written using hardhat and ethers libraries:
+There are 21 unit tests so far written using hardhat and ethers libraries:
 
 ![](./multi_sig_tests.png)
+
+## Instructions to run the app
+
+1. Clone the repo as `git clone https://github.com/siddharthaDevineni/multi-sig_smart_contract.git`
+2. Open the project on VS Code and create an `.env` file similar to _.env.template_ and fill your **GOERLI API KEY** and **WALLET PRIVATE KEY**
+3. Install Metamask and log in
+4. `cd frontend` and `npm start` to run the dApp on your local host.
+
+## Tools used in this project:
+
+1. Solidity
+2. Javascript
+3. Ethers
+4. Hardhat
+5. Chai and Mocha
+6. React
+7. HTML and CSS
+8. Etherscan
+9. Alchemy provider
+10. Metamask
