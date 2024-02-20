@@ -102,6 +102,19 @@ describe("MultiSig", function () {
       );
     });
 
+    it("get current trxId using transactionCount", async () => {
+      const { multiSig, recipient } = await loadFixture(deployMultiSigFixture);
+      let trx = await multiSig.transactionCount();
+      assert.equal(trx, 0);
+
+      await multiSig.submitTransaction(
+        recipient.address,
+        ethers.parseEther("1")
+      );
+      let newTrx = await multiSig.transactionCount();
+      assert.equal(newTrx, 1); // 2nd transaction 0 indexed mapping, so total 2 transactions
+    });
+
     it("should not call addTransaction function externally", async function () {
       const { multiSig } = await loadFixture(deployMultiSigFixture);
       assert.equal(
@@ -207,7 +220,7 @@ describe("MultiSig", function () {
       );
     });
 
-    it.only("should transfer the amount to another recipient after second execution", async function () {
+    it("should transfer the amount to another recipient after second execution", async function () {
       const { multiSig, owner1, owner2, recipient, recipient2 } =
         await loadFixture(deployMultiSigFixture);
       await owner1.sendTransaction({

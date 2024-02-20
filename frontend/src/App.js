@@ -3,7 +3,7 @@ import "./App.css";
 import ABI from "./contracts/MultiSig.json";
 import { ethers } from "ethers";
 
-const multisigAddress = "0xf225B9A2f4266Edcf9b0c16082f2143B715CEAD8";
+const multisigAddress = "0x3f19D2CCB0ab01e7418CAf037Ce359A0d753ccaA";
 
 function App() {
   const [owner, setOwner] = useState();
@@ -13,7 +13,7 @@ function App() {
   const [beneficiary, setBeneficiary] = useState();
   const [beneBalance, setBeneBalance] = useState();
   const [amountToBene, setAmountToBene] = useState();
-  const [trxId, setTrxId] = useState("");
+  const [currentTrxId, setCurrentTrxId] = useState(0);
   const [confirmationsLeft, setConfirmationsLeft] = useState(2);
 
   const checkCurrentAccount = () => {
@@ -155,15 +155,16 @@ function App() {
     if (owner && amountToBene && beneficiary) {
       let transferInWei = ethers.parseEther(amountToBene);
       try {
-        const multiSigContract = await instantiateContract();
+        multiSigContract = await instantiateContract();
+        const trxCount = await multiSigContract.transactionCount();
+        console.log("trxCount: ", trxCount);
+        setCurrentTrxId(trxCount);
+
         // this will confirm once
-        const trxId = await multiSigContract.submitTransaction(
+        await multiSigContract.submitTransaction(
           beneficiary,
           ethers.toQuantity(transferInWei)
         );
-        setTrxId(trxId);
-        await confirmationsCountByTrxId();
-        console.log("trxId in submit: ", trxId);
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
       }
@@ -181,19 +182,18 @@ function App() {
   const confirmByTrxId = async () => {
     try {
       const multiSigContract = await instantiateContract();
-      const trxIdConfirm = await multiSigContract.confirmTransaction(1);
-      console.log("trxIdConfirm: ", trxIdConfirm);
-      confirmationsCountByTrxId(trxIdConfirm);
-      setTrxId(trxIdConfirm);
+      await multiSigContract.confirmTransaction(currentTrxId);
+      console.log("trxIdConfirm: ", currentTrxId);
+      confirmationsCountByTrxId(currentTrxId);
     } catch (error) {
       alert(`Error: ` + `${error.message}`);
     }
   };
 
-  const confirmationsCountByTrxId = async (trxId) => {
+  const confirmationsCountByTrxId = async (trxIdConfirm) => {
     const multiSigContract = await instantiateContract();
     const getConfirmationsCount = await multiSigContract.getConfirmationsCount(
-      1
+      trxIdConfirm
     );
     setConfirmationsLeft(getConfirmationsCount);
   };
@@ -215,20 +215,13 @@ function App() {
     if (storedBene) {
       setBeneficiary(JSON.parse(storedBene));
     }
-    const storedTrxId = window.localStorage.getItem("trxId");
-    if (storedTrxId) {
-      setTrxId(JSON.parse(storedTrxId));
-    }
   }, []);
 
   useEffect(() => {
     if (beneficiary) {
       window.localStorage.setItem("beneficiary", JSON.stringify(beneficiary));
     }
-    if (trxId) {
-      window.localStorage.setItem("trxId", JSON.stringify(trxId));
-    }
-  }, [beneficiary, trxId]);
+  }, [beneficiary]);
 
   return (
     <div className="App">
