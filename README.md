@@ -6,6 +6,10 @@ Developed using ethers and react. A multi-signature contract is a smart contract
 
 ![](./multi_sig_frontend.png)
 
+## Deployed on Goerli Ethereum test network
+
+The multi-sig smart contract is deployed at **https://goerli.etherscan.io/address/0x3f19D2CCB0ab01e7418CAf037Ce359A0d753ccaA**
+
 ## Implementation Overview:
 
 ![](multi_sig_display.png)
