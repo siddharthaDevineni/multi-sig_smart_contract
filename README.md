@@ -2,9 +2,9 @@
 
 Developed using ethers and react. A multi-signature contract is a smart contract designed so that multiple signatures from different addresses are needed for a transaction to be executed. This project's base concept is a part of Alchemy University's Ethereum Developer bootcamp curriculum.
 
-## Full-Stack Multi-Sigature dApp
+## dApp UI Demo
 
-![](./multi_sig_frontend.png)
+<video src="MultiSig_dApp_Demo.mp4"></video>
 
 ## Deployed on Goerli Ethereum test network
 
