@@ -6,7 +6,7 @@ import { ethers } from "ethers";
 const multisigAddress = "0x3f19D2CCB0ab01e7418CAf037Ce359A0d753ccaA";
 
 function App() {
-  const [owner, setOwner] = useState();
+  const [owner, setOwner] = useState("");
   const [ownerBalance, setOwnerBalance] = useState("");
   const [contractBalance, setContractBalance] = useState("");
   const [fundTheContract, setFundTheContract] = useState("");
@@ -16,9 +16,11 @@ function App() {
   const [currentTrxId, setCurrentTrxId] = useState(0);
   const [confirmationsLeft, setConfirmationsLeft] = useState(2);
 
+  let ownerAddr;
   const checkCurrentAccount = () => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", () => {
+        console.log("account changed: ");
         checkWalletIsConnected();
       });
     }
@@ -32,16 +34,38 @@ function App() {
         });
         setOwner(accounts[0]);
         updateBalances();
-        const multiSigContract = await instantiateContract();
-        if (multiSigContract) {
-          multiSigContract.on("Transfer", () => {
-            updateBalances();
-          });
-        }
       } catch (error) {
         alert(`Error: ` + `${error.message}`);
+        setOwner("");
+        updateBalances();
       }
     } else {
+      let link = "https://metamask.io/download.html";
+      alert(
+        `Please install and connect to Metamask extension, a virtual Ethereum wallet from ` +
+          `${link}`
+      );
+      setOwner("");
+      updateBalances();
+    }
+  };
+
+  const connectWallet = async () => {
+    if (window.ethereum) {
+      try {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        setOwner(accounts[0]);
+        updateBalances();
+      } catch (err) {
+        alert(`Error: ` + `${err.message}`);
+        setOwner("");
+        updateBalances();
+      }
+    } else {
+      setOwner("");
+      updateBalances();
       let link = "https://metamask.io/download.html";
       alert(
         `Please install and connect to Metamask extension, a virtual Ethereum wallet from ` +
@@ -51,14 +75,25 @@ function App() {
   };
 
   const instantiateContract = async () => {
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
-    const multiSigContract = new ethers.Contract(
-      multisigAddress,
-      ABI.abi,
-      signer
-    );
-    return multiSigContract;
+    if (owner) {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const multiSigContract = new ethers.Contract(
+        multisigAddress,
+        ABI.abi,
+        signer
+      );
+      return multiSigContract;
+    }
+  };
+
+  const contractEventListener = async () => {
+    const multiSigContract = await instantiateContract();
+    if (multiSigContract) {
+      multiSigContract.on("Transfer", () => {
+        updateBalances();
+      });
+    }
   };
 
   const updateBalances = async () => {
@@ -99,7 +134,7 @@ function App() {
 
   const connectWalletButton = () => {
     return (
-      <button className="button" onClick={checkWalletIsConnected}>
+      <button className="button" onClick={connectWallet}>
         {owner ? (
           "Connected: " +
           String(owner).substring(0, 6) +
@@ -200,13 +235,14 @@ function App() {
 
   useEffect(() => {
     checkCurrentAccount();
+    contractEventListener();
     checkWalletIsConnected();
   }, [owner, ownerBalance, contractBalance, beneBalance, beneficiary]);
 
   return (
     <div className="App">
       <header className="App-header">
-        <h3>Welcome to the Multi-Signature Decentraziled App</h3>
+        <h3>Welcome to the Multi-Signature Decentralised App</h3>
         <div>{connectWalletButton()}</div>
         <div className="owner">
           <label>Connected owner's address: {owner}</label>
