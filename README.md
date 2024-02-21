@@ -4,7 +4,7 @@ Developed using ethers and react. A multi-signature contract is a smart contract
 
 ## dApp UI Demo
 
-<video src="./MultiSig_dApp_Demo.mp4" controls tile="dApp"></video>
+![](./MultiSig_dApp_Demo.gif)
 
 ## Deployed on Goerli Ethereum test network
 
