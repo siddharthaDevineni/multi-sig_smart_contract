@@ -12,7 +12,7 @@ The multi-sig smart contract is deployed at **https://goerli.etherscan.io/addres
 
 ## Implementation Overview:
 
-![](multi_sig_display.png)
+![](./media/multi_sig_display.png)
 
 In the above case, the smart contract requires 2-of-3 key signatures to approve and send a transaction to the Ethereum network.
 
@@ -22,13 +22,13 @@ Splitting responsibility of ownership of an address and its funds between multip
 
 ### Nested mapping of confirmations:
 
-![](./multi_sig_mapping.png)
+![](./media/multi_sig_mapping.png)
 
 Nested `confirmations` mapping which maps the transaction ID (uint) to an owner (address) to whether or not they have confirmed the transaction (bool). In short, a transaction Id maps to a mapping of address to booleans. In the above example, the first transaction (Id 0) maps to two addresses, one of which has confirmed the transaction. The second transaction (Id 1) maps to two addresses where both have confirmed the transaction.
 
 ### `addTransaction` function:
 
-![](./multi_sig_trxId.png)
+![](./media/multi_sig_trxId.png)
 
 The transaction IDs are zero-based. In the first `addTransaction`, the transaction with Id 0 is added and the `transactionCount` becomes 1.
 In the next `addTransaction`, the transaction with Id 1 is added and the `transactionCount` becomes 2, and so on.
@@ -48,7 +48,7 @@ Here are a few use cases that can be powered by a multi-signature smart contract
 
 There are 21 unit tests so far written using hardhat and ethers libraries:
 
-![](./multi_sig_tests.png)
+![](./media/multi_sig_tests.png)
 
 ## Instructions to run the app
 
